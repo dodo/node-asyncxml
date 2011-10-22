@@ -89,6 +89,7 @@ class Tag extends EventEmitter
         @Tag = @opts.Tag or Tag # inherit (maybe) extended tag class
         @buffer = [] # after this tag all children emitted data
         @pending = [] # no open child tag
+        @_delayed = null # delayed method calls (null means it's off)
         @closed = false
         @writable = true
         @content = ""
@@ -129,14 +130,20 @@ class Tag extends EventEmitter
         this
 
     children: (children, {direct} = {}) =>
-        if typeof children is 'function'
-            if direct
+        return this unless children?
+        unless typeof children is 'function'
+            content = children
+            children = =>
+                @text content
+        if direct
+            children.call this
+        else
+            @_delayed = [] # mark that this tag has a delayed children scope
+            process.nextTick =>
+                [delayed, @_delayed] = [@_delayed, null] # turn off
                 children.call this
-            else
-                process.nextTick =>
-                    children.call this
-        else if children isnt undefined
-            @text children
+                for method in delayed
+                    method.call this
         this
 
     text: (content, opts = {}) =>
@@ -158,6 +165,9 @@ class Tag extends EventEmitter
     up: () -> null # this node has no parent
 
     end: () =>
+        if @_delayed?
+            @_delayed.push @end
+            return this
         if not @closed
             if @headers
                 data = "#{indent this}#{@headers}/>"
@@ -206,6 +216,9 @@ class Builder extends EventEmitter
         sync_tag.apply this, arguments
 
     end: (data) =>
+        if @_delayed?
+            @_delayed.push => @end(data)
+            return this
         if @pending.length
             @pending[0].once 'end', => @end(data)
         else
