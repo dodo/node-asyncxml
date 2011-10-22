@@ -78,7 +78,7 @@ sync_tag = (name, attrs, children, opts) ->
 
 class Tag extends EventEmitter
     constructor: (@name, @attrs, children, @opts) ->
-        unless typeof attrs is 'object'
+        unless typeof @attrs is 'object'
             [@opts, children, @attrs] = [children, @attrs, {}]
         else
             # if attrs is an object and you want to use opts, make children null
