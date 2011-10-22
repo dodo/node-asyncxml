@@ -109,6 +109,25 @@ module.exports =
         do æ.done
 
 
+    empty: (æ) ->
+        xml = new Builder pretty:on
+        xml.on 'end', æ.done
+        xml.on 'data', (tag) -> æ.equal results.shift(), tag
+        results = [
+            '<test/>'
+            '<p>'
+            'content'
+            '</p>'
+            '<p>'
+            'end'
+            '</p>'
+        ]
+
+        xml.tag('test').end()
+        xml.$tag('p', "content")
+        do æ.done
+
+
     'default pretty': (æ) ->
         xml = new Builder pretty:on
         xml.on 'end', æ.done
