@@ -60,6 +60,7 @@ new_tag = (name, attrs, children, opts) ->
                         tag.removeListener event, pipe[event]
                     return
             throw new Error("this shouldn't happen D:")
+        return
     @emit 'add', tag
     return tag
 
