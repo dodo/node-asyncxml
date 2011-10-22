@@ -1,10 +1,10 @@
-{ "name": "async-xml"
+{ "name": "asyncxml"
 , "description": "async xml builder and generator"
 , "version": "0.0.0"
-, "homepage": "https://github.com/dodo/node-async-xml"
+, "homepage": "https://github.com/dodo/node-asyncxml"
 , "author": "dodo (https://github.com/dodo)"
-, "repository": {"type": "git", "url": "git://github.com/dodo/node-async-xml.git"}
-, "main": "async-xml.js"
+, "repository": {"type": "git", "url": "git://github.com/dodo/node-asyncxml.git"}
+, "main": "asyncxml.js"
 , "engines": {"node": "0.4.x"}
 , "keywords": ["async", "xml", "generation", "stream"]
 , "scripts": {

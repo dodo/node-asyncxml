@@ -1,6 +1,6 @@
 path = require 'path'
 { createReadStream } = require 'fs'
-{ Tag, Builder } = require '../async-xml'
+{ Tag, Builder } = require '../asyncxml'
 
 
 module.exports =
