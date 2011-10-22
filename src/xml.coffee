@@ -127,7 +127,7 @@ class Tag extends EventEmitter
         @headers = "<#{@name}#{new_attrs @attrs}" if @headers
         this
 
-    children: (children, {direct} = {}) ->
+    children: (children, {direct} = {}) =>
         if typeof children is 'function'
             if direct
                 children.call this
