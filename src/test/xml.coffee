@@ -125,6 +125,7 @@ module.exports =
 
         xml.tag('test').end()
         xml.$tag('p', "content")
+        xml.tag('p', "end").end()
         do æ.done
 
 
