@@ -6,7 +6,7 @@
 , "repository": {"type": "git", "url": "git://github.com/dodo/node-asyncxml.git"}
 , "main": "asyncxml.js"
 , "engines": {"node": "0.4.x"}
-, "keywords": ["async", "xml", "generation", "stream"]
+, "keywords": ["async", "xml", "generation", "stream", "browser"]
 , "scripts": {
     "test": "node-waf build && nodeunit test",
     "preinstall": "#preinstall DO NOTHING",
