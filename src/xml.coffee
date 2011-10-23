@@ -9,7 +9,6 @@ new_tag = (name, attrs, children, opts) ->
         # if attrs is an object and you want to use opts, make children null
         attrs ?= {}
     opts ?= {}
-    buffer = []
     pipe = {}
     opts.level = @level+1
     opts = deep_merge @opts, opts # possibility to overwrite existing opts, like pretty
@@ -24,36 +23,44 @@ new_tag = (name, attrs, children, opts) ->
         if @pending[0] is tag
             @emit 'data', data
         else
-            buffer.push data
+            @buffer.push data
 
     EVENTS.forEach (event) =>
         tag.on event, pipe[event] = (args...) =>
             @emit event, args...
 
     tag.on 'end', on_end = (data) =>
-        buffer.push data unless data is undefined
+        @buffer.push data unless data is undefined
         if @pending[0] is tag
             if tag.pending.length
+                if @buffer.length
+                    for data in @buffer
+                        @emit 'data', data
+                    @buffer = []
                 (pender = tag.pending[0]).once 'end', =>
                     on_end()
                     @emit 'end' unless @pending.length
             else
                 if tag.buffer.length
-                    buffer = buffer.concat tag.buffer
+                    @buffer = @buffer.concat tag.buffer
                     tag.buffer = []
                 @pending = @pending.slice(1)
                 tag.removeListener 'data', pipe.data
                 tag.removeListener 'end', on_end
                 for event in EVENTS
                     tag.removeListener event, pipe[event]
-                for data in buffer
-                    @emit 'data', data
+                if @buffer.length
+                    for data in @buffer
+                        @emit 'data', data
+                    @buffer = []
         else
             for known, i in @pending
                 if tag is known
                     @pending = @pending.slice(0,i).concat @pending.slice i+1
-                    before = @pending[i-1]
-                    before.buffer = before.buffer.concat buffer
+                    if @buffer.length
+                        before = @pending[i-1]
+                        before.buffer = before.buffer.concat @buffer
+                        @buffer = []
                     tag.removeListener 'data', pipe.data
                     tag.removeListener 'end', on_end
                     for event in EVENTS
