@@ -1,6 +1,6 @@
 { EventEmitter } = require 'events'
 { deep_merge, indent, new_attrs, safe } = require './util'
-EVENTS = ['add', 'attr', 'attr:remove', 'text', 'remove']
+EVENTS = ['add', 'attr', 'attr:remove', 'text', 'remove', 'close']
 
 new_tag = (name, attrs, children, opts) ->
     unless typeof attrs is 'object'
@@ -61,6 +61,7 @@ new_tag = (name, attrs, children, opts) ->
                     return
             throw new Error("this shouldn't happen D:")
         return
+
     @emit 'add', tag
     return tag
 
@@ -175,6 +176,7 @@ class Tag extends EventEmitter
             else
                 data = "#{indent this}</#{@name}>"
                 @closed = yes
+            @emit 'close', this
             @emit 'end', data
         else if @closed is 'removed'
             @emit 'end'
