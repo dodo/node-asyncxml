@@ -72,6 +72,7 @@ sync_tag = (name, attrs, children, opts) ->
     else
         attrs ?= {}
     opts ?= {}
+    opts.direct ?= yes
     self_ending_children_scope = ->
         @children children, direct:yes
         @end()
@@ -95,7 +96,7 @@ class Tag extends EventEmitter
         @writable = true
         @content = ""
         @headers = "<#{@name}#{new_attrs @attrs}"
-        @children children
+        @children children, @opts
 
     $tag: =>
         # sync tag, - same as normal tag, but closes it automaticly
