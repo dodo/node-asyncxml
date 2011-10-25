@@ -24,7 +24,8 @@ module.exports =
         test = xml.tag('test')
         test.text '<"lind"&wurm>', escape:yes
         test.end()
-        do æ.done
+        xml.end()
+
 
     chain: (æ) ->
         xml = new Builder
@@ -106,11 +107,11 @@ module.exports =
         xml.on 'end', æ.done
         xml.once 'data', (tag) -> æ.equal "<test a=1 b=\"b\" c d=\"true\"/>", tag
         xml.tag('test', a:1, b:'b', c:null, d:true).end()
-        do æ.done
+        xml.end()
 
 
     empty: (æ) ->
-        xml = new Builder pretty:on
+        xml = new Builder
         xml.on 'end', æ.done
         xml.on 'data', (tag) -> æ.equal results.shift(), tag
         results = [
@@ -125,8 +126,9 @@ module.exports =
 
         xml.tag('test').end()
         xml.$tag('p', "content")
-        xml.tag('p', "end").end()
-        do æ.done
+        p = xml.tag('p', "end")
+        p.end()
+        xml.end()
 
 
     'default pretty': (æ) ->
@@ -141,7 +143,7 @@ module.exports =
         apple = xml.tag('apple')
         apple.tag('wurm').end()
         apple.end()
-        do æ.done
+        xml.end()
 
 
     'opts pretty': (æ) ->
@@ -157,6 +159,7 @@ module.exports =
         wurm = apple.tag('wurm')
         apple.end()
         wurm.end()
+        xml.end()
 
 
     children: (æ) ->
@@ -279,6 +282,7 @@ module.exports =
         ), 4
         setTimeout ( ->
             grass.end()
+            xml.end()
         ),3
 
     pipe: (æ) ->

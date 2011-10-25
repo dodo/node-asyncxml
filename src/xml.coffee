@@ -36,28 +36,25 @@ new_tag = (name, attrs, children, opts) ->
 
     tag.on 'end', on_end = (data) =>
         @buffer.push data unless data is undefined
+        tag.removeListener 'end', on_end
         if @pending[0] is tag
             if tag.pending.length
-                if @buffer.length
-                    for data in @buffer
-                        @emit 'data', data
-                    @buffer = []
-                (pender = tag.pending[0]).once 'end', =>
+                tag.pending[0].once 'end', ->
                     on_end()
-                    @emit 'end' unless @pending.length
             else
                 if tag.buffer.length
                     @buffer = @buffer.concat tag.buffer
                     tag.buffer = []
                 @pending = @pending.slice(1)
                 tag.removeListener 'data', pipe.data
-                tag.removeListener 'end', on_end
                 for event in EVENTS
                     tag.removeListener event, pipe[event]
                 if @buffer.length
                     for data in @buffer
                         @emit 'data', data
                     @buffer = []
+                if @closed and @pending.length is 0
+                    @end()
         else
             for known, i in @pending
                 if tag is known
@@ -67,9 +64,10 @@ new_tag = (name, attrs, children, opts) ->
                         before.buffer = before.buffer.concat @buffer
                         @buffer = []
                     tag.removeListener 'data', pipe.data
-                    tag.removeListener 'end', on_end
                     for event in EVENTS
                         tag.removeListener event, pipe[event]
+                    if @closed is 'pending'
+                        @end()
                     return
             throw new Error("this shouldn't happen D:")
         return
@@ -181,17 +179,21 @@ class Tag extends EventEmitter
 
     end: () =>
         if @_delayed?
+            @closed = 'delayed'
             @_delayed.push @end
             return this
-        if not @closed
+        if not @closed or @closed is 'delayed' or @closed is 'pending'
             if @headers
                 data = "#{indent this}#{@headers}/>"
                 @closed = 'self'
             else
                 data = "#{indent this}</#{@name}>"
-                @closed = yes
+                if @pending.length
+                    @closed = 'pending'
+                else
+                    @closed = yes
             @emit 'close', this
-            @emit 'end', data
+            @emit 'end', data unless @closed is 'pending'
         else if @closed is 'removed'
             @emit 'end'
         else
@@ -215,6 +217,7 @@ class Tag extends EventEmitter
 class Builder extends EventEmitter
     constructor: (@opts = {}) ->
         @buffer = [] # for child output
+        @closed = no
         @pending = [] # no open child tag
         @opts.Tag ?= Tag
         @opts.pretty ?= off
@@ -233,13 +236,18 @@ class Builder extends EventEmitter
 
     end: (data) =>
         if @_delayed?
-            @_delayed.push => @end(data)
+            @closed = 'delayed'
+            @_delayed.push =>
+                @end(data)
             return this
         if @pending.length
-            @pending[0].once 'end', => @end(data)
+            @closed = 'pending'
+            @pending[0].once 'end', =>
+                @end(data)
         else
             @emit 'data', "#{indent this}#{data}" if data
-            @emit 'end'
+            @emit 'end' if not @closed or @closed is 'pending'
+            @closed = yes
         this
 
 
