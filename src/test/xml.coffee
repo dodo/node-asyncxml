@@ -299,3 +299,32 @@ module.exports =
         stream = createReadStream path.join(__dirname,"..","..","..","filename")
         stream.pipe(file)
         xml.end()
+
+    'sync call order': (æ) ->
+        xml = new Builder
+        xml.on 'end', æ.done
+        xml.on 'data', (tag) -> æ.equal results.shift(), tag
+        results = [
+            '<apple>'
+            '<wurm>'
+            '<seed/>'
+            '</wurm>'
+            '</apple>'
+        ]
+        counter = 0
+        apple = xml.$tag 'apple', ->
+            æ.equal counter, 0
+            counter++
+            wurm = @$tag 'wurm', ->
+                æ.equal counter, 1
+                counter++
+                @tag('seed').end()
+                æ.equal counter, 2
+            counter++
+            æ.equal counter, 3
+        counter++
+        æ.equal counter, 4
+        xml.end()
+        counter++
+        æ.equal counter, 5
+
