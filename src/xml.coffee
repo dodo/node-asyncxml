@@ -2,7 +2,7 @@
 { deep_merge, indent, new_attrs, safe } = require './util'
 EVENTS = ['add', 'attr', 'attr:remove', 'text', 'remove', 'close']
 
-new_tag = (name, attrs, children, opts) ->
+new_tag = (builder, name, attrs, children, opts) ->
     unless typeof attrs is 'object'
         [opts, children, attrs] = [children, attrs, {}]
     else
@@ -10,11 +10,15 @@ new_tag = (name, attrs, children, opts) ->
         attrs ?= {}
     opts ?= {}
     pipe = {}
-    opts.level = @level+1
+    opts.level ?= @level+1
+
+    circular = 'default':@opts.builder, 'input':opts.builder
+    opts.builder = @opts.builder = null
     opts = deep_merge @opts, opts # possibility to overwrite existing opts, like pretty
+    @opts.builder = circular['default']
+    opts.builder = circular['input'] or @opts.builder
 
-
-    @pending.push tag = new @Tag name, attrs, _children, opts
+    @pending.push tag = new (builder.Tag) name, attrs, null, opts
 
     tag.up = (opts = {}) => # set parent
         opts.end ?= true
@@ -74,18 +78,6 @@ new_tag = (name, attrs, children, opts) ->
     return tag
 
 
-sync_tag = (name, attrs, children, opts) ->
-    unless typeof attrs is 'object'
-        [opts, children, attrs] = [children, attrs, {}]
-    else
-        attrs ?= {}
-    opts ?= {}
-    opts.direct ?= yes
-    self_ending_children_scope = ->
-        @children children, direct:yes
-        @end()
-    @tag.call this, name, attrs, self_ending_children_scope, opts
-
 
 class Tag extends EventEmitter
     constructor: (@name, @attrs, children, @opts) ->
@@ -96,7 +88,7 @@ class Tag extends EventEmitter
             @attrs ?= {}
             @opts ?= {}
         @level = @opts.level
-        @Tag = @opts.Tag or Tag # inherit (maybe) extended tag class
+        @builder = @opts.builder #or new Builder # inheritence
         @buffer = [] # after this tag all children emitted data
         @pending = [] # no open child tag
         @closed = false
@@ -105,15 +97,11 @@ class Tag extends EventEmitter
         @headers = "<#{@name}#{new_attrs @attrs}"
         @children children, @opts
 
-    $tag: =>
-        # sync tag, - same as normal tag, but closes it automaticly
-        sync_tag.apply this, arguments
+    tag: (args...) =>
+        @builder._new_tag.apply this, [this].concat args
 
-    tag: =>
-        if @headers
-            @emit 'data', "#{indent this}#{@headers}>"
-            delete @headers
-        new_tag.apply this, arguments
+    $tag: (args...) =>
+        @builder._new_sync_tag.apply this, [this].concat args
 
     attr: (key, value) =>
         if typeof key is 'string'
@@ -158,11 +146,11 @@ class Tag extends EventEmitter
         if @headers
             @emit 'data', "#{indent this}#{@headers}>"
             delete @headers
-        @emit 'data', "#{indent this}#{content}" if content
+        @emit 'data', "#{indent this}#{content}" if content # FIXME is this really nessary?
         @content += content
         true
 
-    up: () -> null # this node has no parent
+    up: () -> @builder # this node has no parent
 
     end: () =>
         if not @closed or @closed is 'pending'
@@ -197,25 +185,47 @@ class Tag extends EventEmitter
         this
 
 
+
 class Builder extends EventEmitter
     constructor: (@opts = {}) ->
+        @builder = this
         @buffer = [] # for child output
         @closed = no
         @pending = [] # no open child tag
-        @opts.Tag ?= Tag
+        @opts.builder ?= this
         @opts.pretty ?= off
         @level = @opts.level ? 0
         @Tag = @opts.Tag or Tag
 
-    tag: =>
+    _new_tag: (parent, args...) =>
+        if parent.headers
+            parent.emit 'data', "#{indent parent}#{parent.headers}>"
+            delete parent.headers
+        new_tag.apply parent, [this].concat args
+
+    _new_sync_tag: (parent, name, attrs, children, opts) =>
+        # sync tag, - same as normal tag, but closes it automaticly
+        unless typeof attrs is 'object'
+            [opts, children, attrs] = [children, attrs, {}]
+        else
+            attrs ?= {}
+        opts ?= {}
+        self_ending_children_scope = ->
+            @children children
+            @end()
+        @_new_tag parent, name, attrs, self_ending_children_scope, opts
+
+    tag: (args...) =>
         @level--
-        tag = new_tag.apply this, arguments
+        tag = @_new_tag.apply this, [this].concat args
         @level++
         tag
 
     $tag: (args...) =>
-        # sync tag, - same as normal tag, but closes it automaticly
-        sync_tag.apply this, arguments
+        @level--
+        tag = @_new_sync_tag.apply this, [this].concat args
+        @level++
+        tag
 
     end: (data) =>
         if @pending.length
