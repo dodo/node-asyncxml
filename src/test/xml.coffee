@@ -178,7 +178,7 @@ module.exports =
             wurm.children ->
                 @tag('seed').end()
                 @end()
-            apple.end()
+            @end()
         xml.end()
 
 
@@ -200,7 +200,7 @@ module.exports =
         apple = xml.tag 'apple', ->
             @$tag 'wurm', color:'red', ->
                 seed = @tag('seed')
-            apple.end()
+            @end()
 
         setTimeout ( ->
             æ.notEqual seed, null

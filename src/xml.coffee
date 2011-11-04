@@ -13,9 +13,6 @@ new_tag = (name, attrs, children, opts) ->
     opts.level = @level+1
     opts = deep_merge @opts, opts # possibility to overwrite existing opts, like pretty
 
-    { direct } = opts
-    _children = children
-    _children = undefined if direct
 
     @pending.push tag = new @Tag name, attrs, _children, opts
 
@@ -73,7 +70,7 @@ new_tag = (name, attrs, children, opts) ->
         return
 
     @emit 'add', tag
-    tag.children children, opts if direct
+    tag.children children, opts if children?
     return tag
 
 
@@ -102,7 +99,6 @@ class Tag extends EventEmitter
         @Tag = @opts.Tag or Tag # inherit (maybe) extended tag class
         @buffer = [] # after this tag all children emitted data
         @pending = [] # no open child tag
-        @_delayed = null # delayed method calls (null means it's off)
         @closed = false
         @writable = true
         @content = ""
@@ -142,21 +138,12 @@ class Tag extends EventEmitter
         @headers = "<#{@name}#{new_attrs @attrs}" if @headers
         this
 
-    children: (children, {direct} = {}) =>
+    children: (children) =>
         return this unless children?
-        unless typeof children is 'function'
-            content = children
-            children = =>
-                @text content
-        if direct
+        if typeof children is 'function'
             children.call this
         else
-            @_delayed = [] # mark that this tag has a delayed children scope
-            process.nextTick =>
-                [delayed, @_delayed] = [@_delayed, null] # turn off
-                children.call this
-                for method in delayed
-                    method.call this
+            @text children
         this
 
     text: (content, opts = {}) =>
@@ -178,11 +165,7 @@ class Tag extends EventEmitter
     up: () -> null # this node has no parent
 
     end: () =>
-        if @_delayed?
-            @closed = 'delayed'
-            @_delayed.push @end
-            return this
-        if not @closed or @closed is 'delayed' or @closed is 'pending'
+        if not @closed or @closed is 'pending'
             if @headers
                 data = "#{indent this}#{@headers}/>"
                 @closed = 'self'
@@ -235,11 +218,6 @@ class Builder extends EventEmitter
         sync_tag.apply this, arguments
 
     end: (data) =>
-        if @_delayed?
-            @closed = 'delayed'
-            @_delayed.push =>
-                @end(data)
-            return this
         if @pending.length
             @closed = 'pending'
             @pending[0].once 'end', =>
