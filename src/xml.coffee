@@ -27,7 +27,7 @@ new_tag = (builder, name, attrs, children, opts) ->
 
     tag.on 'data', pipe.data = (data) =>
         if @pending[0] is tag
-            @emit 'data', data
+            @write data
         else
             @buffer.push data
 
@@ -35,8 +35,7 @@ new_tag = (builder, name, attrs, children, opts) ->
         tag.on event, pipe[event] = (args...) =>
             @emit event, args...
 
-    tag.on 'end', on_end = (data) =>
-        @buffer.push data unless data is undefined
+    tag.on 'end', on_end = =>
         tag.removeListener 'end', on_end
         if @pending[0] is tag
             if tag.pending.length
@@ -52,7 +51,7 @@ new_tag = (builder, name, attrs, children, opts) ->
                     tag.removeListener event, pipe[event]
                 if @buffer.length
                     for data in @buffer
-                        @emit 'data', data
+                        @write data
                     @buffer = []
                 if @closed and @pending.length is 0
                     @end()
@@ -68,6 +67,10 @@ new_tag = (builder, name, attrs, children, opts) ->
                     for event in EVENTS
                         tag.removeListener event, pipe[event]
                     if @closed is 'pending'
+                        if @buffer.length
+                            for data in @buffer
+                                @write data
+                            @buffer = []
                         @end()
                     return
             throw new Error("this shouldn't happen D:")
@@ -93,8 +96,8 @@ class Tag extends EventEmitter
         @pending = [] # no open child tag
         @closed = false
         @writable = true
+        @isempty = yes
         @content = ""
-        @headers = "<#{@name}#{new_attrs @attrs}"
         @children children, @opts
 
     tag: (args...) =>
@@ -112,7 +115,6 @@ class Tag extends EventEmitter
             for own k, v of key
                 @attrs[k] = v
                 @emit 'attr', this, k, v
-        @headers = "<#{@name}#{new_attrs @attrs}" if @headers
         this
 
     removeAttr: (key) =>
@@ -123,7 +125,6 @@ class Tag extends EventEmitter
             for own k, v of key
                 delete @attr[key]
                 @emit 'attr:remove', this, key
-        @headers = "<#{@name}#{new_attrs @attrs}" if @headers
         this
 
     children: (children) =>
@@ -143,28 +144,29 @@ class Tag extends EventEmitter
 
     write: (content, {escape} = {}) =>
         content = safe(content) if escape
-        if @headers
-            @emit 'data', "#{indent this}#{@headers}>"
-            delete @headers
-        @emit 'data', "#{indent this}#{content}" if content # FIXME is this really nessary?
-        @content += content
+        if @isempty
+            @emit 'data', "#{indent this}<#{@name}#{new_attrs @attrs}>"
+            @isempty = no
+        @emit 'data', "#{indent this}#{content}" if content
         true
 
     up: () -> @builder # this node has no parent
 
     end: () =>
         if not @closed or @closed is 'pending'
-            if @headers
-                data = "#{indent this}#{@headers}/>"
-                @closed = 'self'
+            if @pending.length
+                @emit 'close', this if @closed isnt 'pending'
+                @closed = 'pending'
             else
-                data = "#{indent this}</#{@name}>"
-                if @pending.length
-                    @closed = 'pending'
+                if @isempty
+                    data = "#{indent this}<#{@name}#{new_attrs @attrs}/>"
+                    @closed = 'self'
                 else
+                    data = "#{indent this}</#{@name}>"
                     @closed = yes
-            @emit 'close', this
-            @emit 'end', data unless @closed is 'pending'
+                @emit 'data', data
+
+            @emit 'end' unless @closed is 'pending'
         else if @closed is 'removed'
             @emit 'end'
         else
@@ -198,9 +200,6 @@ class Builder extends EventEmitter
         @Tag = @opts.Tag or Tag
 
     _new_tag: (parent, args...) =>
-        if parent.headers
-            parent.emit 'data', "#{indent parent}#{parent.headers}>"
-            delete parent.headers
         new_tag.apply parent, [this].concat args
 
     _new_sync_tag: (parent, name, attrs, children, opts) =>
@@ -227,13 +226,14 @@ class Builder extends EventEmitter
         @level++
         tag
 
-    end: (data) =>
+    write: (data) =>
+        @emit 'data', data
+
+    end: () =>
         if @pending.length
             @closed = 'pending'
-            @pending[0].once 'end', =>
-                @end(data)
+            @pending[0].once 'end', @end
         else
-            @emit 'data', "#{indent this}#{data}" if data
             @emit 'end' if not @closed or @closed is 'pending'
             @closed = yes
         this
