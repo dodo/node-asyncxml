@@ -78,6 +78,19 @@ new_tag = (name, attrs, children, opts) ->
     return tag
 
 
+sync_tag = (name, attrs, children, opts) ->
+    # sync tag, - same as normal tag, but closes it automaticly
+    unless typeof attrs is 'object'
+        [opts, children, attrs] = [children, attrs, {}]
+    else
+        attrs ?= {}
+    opts ?= {}
+    self_ending_children_scope = ->
+        @children children
+        @end()
+    new_tag.call this, name, attrs, self_ending_children_scope, opts
+
+
 
 class Tag extends EventEmitter
     constructor: (@name, @attrs, children, opts) ->
@@ -97,12 +110,8 @@ class Tag extends EventEmitter
         @isempty = yes
         @content = ""
         @children children, opts
-
-    tag: =>
-        @builder._new_tag this, arguments...
-
-    $tag: =>
-        @builder._new_sync_tag this, arguments...
+        @$tag = sync_tag
+        @tag = new_tag
 
     attr: (key, value) =>
         if typeof key is 'string'
@@ -195,27 +204,8 @@ class Builder extends EventEmitter
         @opts.pretty ?= off
         @level = @opts.level ? -1
         @Tag = Tag
-
-    _new_tag: (parent, args...) =>
-        new_tag.apply parent, args
-
-    _new_sync_tag: (parent, name, attrs, children, opts) =>
-        # sync tag, - same as normal tag, but closes it automaticly
-        unless typeof attrs is 'object'
-            [opts, children, attrs] = [children, attrs, {}]
-        else
-            attrs ?= {}
-        opts ?= {}
-        self_ending_children_scope = ->
-            @children children
-            @end()
-        @_new_tag parent, name, attrs, self_ending_children_scope, opts
-
-    tag: =>
-        @_new_tag this, arguments...
-
-    $tag: =>
-        @_new_sync_tag this, arguments...
+        @tag = new_tag
+        @$tag = sync_tag
 
     write: (data) =>
         @emit 'data', data
