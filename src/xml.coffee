@@ -2,7 +2,8 @@
 { deep_merge, indent, new_attrs, safe } = require './util'
 EVENTS = ['add', 'attr', 'attr:remove', 'text', 'remove', 'close']
 
-new_tag = (builder, name, attrs, children, opts) ->
+
+new_tag = (name, attrs, children, opts) ->
     unless typeof attrs is 'object'
         [opts, children, attrs] = [children, attrs, {}]
     else
@@ -18,7 +19,7 @@ new_tag = (builder, name, attrs, children, opts) ->
     @opts.builder = circular['default']
     opts.builder = circular['input'] or @opts.builder
 
-    @pending.push tag = new (builder.Tag) name, attrs, null, opts
+    @pending.push tag = new opts.builder.Tag name, attrs, null, opts
 
     tag.up = (opts = {}) => # set parent
         opts.end ?= true
@@ -100,11 +101,11 @@ class Tag extends EventEmitter
         @content = ""
         @children children, @opts
 
-    tag: (args...) =>
-        @builder._new_tag.apply this, [this].concat args
+    tag: =>
+        @builder._new_tag this, arguments...
 
-    $tag: (args...) =>
-        @builder._new_sync_tag.apply this, [this].concat args
+    $tag: =>
+        @builder._new_sync_tag this, arguments...
 
     attr: (key, value) =>
         if typeof key is 'string'
@@ -200,7 +201,7 @@ class Builder extends EventEmitter
         @Tag = @opts.Tag or Tag
 
     _new_tag: (parent, args...) =>
-        new_tag.apply parent, [this].concat args
+        new_tag.apply parent, args
 
     _new_sync_tag: (parent, name, attrs, children, opts) =>
         # sync tag, - same as normal tag, but closes it automaticly
@@ -214,15 +215,15 @@ class Builder extends EventEmitter
             @end()
         @_new_tag parent, name, attrs, self_ending_children_scope, opts
 
-    tag: (args...) =>
+    tag: =>
         @level--
-        tag = @_new_tag.apply this, [this].concat args
+        tag = @_new_tag this, arguments...
         @level++
         tag
 
-    $tag: (args...) =>
+    $tag: =>
         @level--
-        tag = @_new_sync_tag.apply this, [this].concat args
+        tag = @_new_sync_tag this, arguments...
         @level++
         tag
 
