@@ -12,10 +12,18 @@ parse_args = (name, attrs, children, opts) ->
     opts ?= {}
     return [name, attrs, children, opts]
 
+flush = ->
+    if @buffer.length
+        @write data for data in @buffer
+        @buffer = []
+
+rmevents = (events) ->
+    @removeListener 'data', events.data
+    @removeListener event, events[event] for event in EVENTS
 
 new_tag = ->
     [name, attrs, children, opts] = parse_args arguments...
-    pipe = {}
+    events = {}
     opts.level ?= @level+1
 
     opts = deep_merge @builder.opts, opts # possibility to overwrite existing opts, like pretty
@@ -28,18 +36,18 @@ new_tag = ->
         tag.end.apply tag, arguments if opts.end
         this
 
-    tag.on 'data', pipe.data = (data) =>
+    tag.on 'data', events.data = (data) =>
         if @pending[0] is tag
             @write data
         else
             @buffer.push data
 
-    EVENTS.forEach (event) =>
-        tag.on event, pipe[event] = (args...) =>
-            @emit event, args...
+    pipe = (event) =>
+        tag.on event, events[event] = =>
+            @emit event, arguments...
+    pipe event for event in EVENTS
 
-    tag.on 'end', on_end = =>
-        tag.removeListener 'end', on_end
+    tag.once 'end', on_end = =>
         if @pending[0] is tag
             if tag.pending.length
                 tag.pending[0].once 'end', on_end
@@ -48,13 +56,8 @@ new_tag = ->
                     @buffer = @buffer.concat tag.buffer
                     tag.buffer = []
                 @pending = @pending.slice(1)
-                tag.removeListener 'data', pipe.data
-                for event in EVENTS
-                    tag.removeListener event, pipe[event]
-                if @buffer.length
-                    for data in @buffer
-                        @write data
-                    @buffer = []
+                rmevents.call tag, events
+                flush.call this
                 if @closed and @pending.length is 0
                     @end()
         else
@@ -65,14 +68,9 @@ new_tag = ->
                         before = @pending[i-1]
                         before.buffer = before.buffer.concat @buffer
                         @buffer = []
-                    tag.removeListener 'data', pipe.data
-                    for event in EVENTS
-                        tag.removeListener event, pipe[event]
+                    rmevents.call tag, events
                     if @closed is 'pending'
-                        if @buffer.length
-                            for data in @buffer
-                                @write data
-                            @buffer = []
+                        flush.call this
                         @end()
                     return
             throw new Error("this shouldn't happen D:")
@@ -81,7 +79,6 @@ new_tag = ->
     @emit 'add', tag
     tag.children children, opts if children?
     return tag
-
 
 sync_tag = ->
     [name, attrs, children, opts] = parse_args arguments...
