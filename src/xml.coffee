@@ -13,13 +13,10 @@ new_tag = (name, attrs, children, opts) ->
     pipe = {}
     opts.level ?= @level+1
 
-    circular = 'default':@opts.builder, 'input':opts.builder
-    opts.builder = @opts.builder = null
-    opts = deep_merge @opts, opts # possibility to overwrite existing opts, like pretty
-    @opts.builder = circular['default']
-    opts.builder = circular['input'] or @opts.builder
+    opts = deep_merge @builder.opts, opts # possibility to overwrite existing opts, like pretty
+    opts.builder = @builder
 
-    @pending.push tag = new opts.builder.Tag name, attrs, null, opts
+    @pending.push tag = new @builder.Tag name, attrs, null, opts
 
     tag.up = (opts = {}) => # set parent
         opts.end ?= true
@@ -83,22 +80,23 @@ new_tag = (name, attrs, children, opts) ->
 
 
 class Tag extends EventEmitter
-    constructor: (@name, @attrs, children, @opts) ->
+    constructor: (@name, @attrs, children, opts) ->
         unless typeof @attrs is 'object'
-            [@opts, children, @attrs] = [children, @attrs, {}]
+            [opts, children, @attrs] = [children, @attrs, {}]
         else
             # if attrs is an object and you want to use opts, make children null
             @attrs ?= {}
-            @opts ?= {}
-        @level = @opts.level
-        @builder = @opts.builder #or new Builder # inheritence
+            opts ?= {}
+        @pretty = opts.pretty ? off
+        @level = opts.level
+        @builder = opts.builder #or new Builder # inheritence
         @buffer = [] # after this tag all children emitted data
         @pending = [] # no open child tag
         @closed = false
         @writable = true
         @isempty = yes
         @content = ""
-        @children children, @opts
+        @children children, opts
 
     tag: =>
         @builder._new_tag this, arguments...
@@ -194,10 +192,9 @@ class Builder extends EventEmitter
         @buffer = [] # for child output
         @closed = no
         @pending = [] # no open child tag
-        @opts.builder ?= this
         @opts.pretty ?= off
         @level = @opts.level ? -1
-        @Tag = @opts.Tag or Tag
+        @Tag = Tag
 
     _new_tag: (parent, args...) =>
         new_tag.apply parent, args

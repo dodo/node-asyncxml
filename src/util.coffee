@@ -13,7 +13,7 @@ deep_merge = (objs...) ->
     res
 
 
-indent = ({level, opts:{pretty}}) ->
+indent = ({level, pretty}) ->
     return "" if not pretty or level is 0
     pretty = "  " if pretty is on
     return pretty
