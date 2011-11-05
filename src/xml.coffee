@@ -3,13 +3,18 @@
 EVENTS = ['add', 'attr', 'attr:remove', 'text', 'remove', 'close']
 
 
-new_tag = (name, attrs, children, opts) ->
+parse_args = (name, attrs, children, opts) ->
     unless typeof attrs is 'object'
         [opts, children, attrs] = [children, attrs, {}]
     else
         # if attrs is an object and you want to use opts, make children null
         attrs ?= {}
     opts ?= {}
+    return [name, attrs, children, opts]
+
+
+new_tag = ->
+    [name, attrs, children, opts] = parse_args arguments...
     pipe = {}
     opts.level ?= @level+1
 
@@ -78,13 +83,8 @@ new_tag = (name, attrs, children, opts) ->
     return tag
 
 
-sync_tag = (name, attrs, children, opts) ->
-    # sync tag, - same as normal tag, but closes it automaticly
-    unless typeof attrs is 'object'
-        [opts, children, attrs] = [children, attrs, {}]
-    else
-        attrs ?= {}
-    opts ?= {}
+sync_tag = ->
+    [name, attrs, children, opts] = parse_args arguments...
     self_ending_children_scope = ->
         @children children
         @end()
@@ -93,13 +93,8 @@ sync_tag = (name, attrs, children, opts) ->
 
 
 class Tag extends EventEmitter
-    constructor: (@name, @attrs, children, opts) ->
-        unless typeof @attrs is 'object'
-            [opts, children, @attrs] = [children, @attrs, {}]
-        else
-            # if attrs is an object and you want to use opts, make children null
-            @attrs ?= {}
-            opts ?= {}
+    constructor: ->
+        [@name, @attrs, children, opts] = parse_args arguments...
         @pretty = opts.pretty ? off
         @level = opts.level
         @builder = opts.builder #or new Builder # inheritence
