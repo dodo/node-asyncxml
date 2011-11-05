@@ -151,14 +151,21 @@ module.exports =
         xml.on 'end', æ.done
         xml.on 'data', (tag) -> æ.equal results.shift(), tag
         results = [
-            '<apple>'
-            '→ → →<wurm/>'
-            '</apple>'
+            '<product>'
+            '→ → →<metadata>'
+            '→ → →→ → →<count value=4/>'
+            '→ → →</metadata>'
+            '</product>'
         ]
-        apple = xml.tag('apple')
-        wurm = apple.tag('wurm')
-        apple.end()
-        wurm.end()
+        product = xml.tag('product')
+        æ.equal product.level, 0
+        metadata = product.tag('metadata')
+        æ.equal metadata.level, 1
+        product.end()
+        count = metadata.tag('count', value:4)
+        æ.equal count.level, 2
+        count.end()
+        metadata.end()
         xml.end()
 
 

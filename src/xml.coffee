@@ -40,8 +40,7 @@ new_tag = (name, attrs, children, opts) ->
         tag.removeListener 'end', on_end
         if @pending[0] is tag
             if tag.pending.length
-                tag.pending[0].once 'end', ->
-                    on_end()
+                tag.pending[0].once 'end', on_end
             else
                 if tag.buffer.length
                     @buffer = @buffer.concat tag.buffer
@@ -197,7 +196,7 @@ class Builder extends EventEmitter
         @pending = [] # no open child tag
         @opts.builder ?= this
         @opts.pretty ?= off
-        @level = @opts.level ? 0
+        @level = @opts.level ? -1
         @Tag = @opts.Tag or Tag
 
     _new_tag: (parent, args...) =>
@@ -216,16 +215,10 @@ class Builder extends EventEmitter
         @_new_tag parent, name, attrs, self_ending_children_scope, opts
 
     tag: =>
-        @level--
-        tag = @_new_tag this, arguments...
-        @level++
-        tag
+        @_new_tag this, arguments...
 
     $tag: =>
-        @level--
-        tag = @_new_sync_tag this, arguments...
-        @level++
-        tag
+        @_new_sync_tag this, arguments...
 
     write: (data) =>
         @emit 'data', data

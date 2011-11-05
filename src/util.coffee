@@ -14,12 +14,9 @@ deep_merge = (objs...) ->
 
 
 indent = ({level, opts:{pretty}}) ->
-    return "" unless pretty
+    return "" if not pretty or level is 0
     pretty = "  " if pretty is on
-    output = ""
-    for i in [0...level]
-        output += pretty
-    return output
+    return pretty
 
 
 new_attrs = (attrs = {}) ->
