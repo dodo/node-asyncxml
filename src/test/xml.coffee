@@ -136,9 +136,9 @@ module.exports =
         xml.on 'end', æ.done
         xml.on 'data', (tag) -> æ.equal results.shift(), tag
         results = [
-            '<apple>'
-            '  <wurm/>'
-            '</apple>'
+            '<apple>\n'
+            '  <wurm/>\n'
+            '</apple>\n'
         ]
         apple = xml.tag('apple')
         apple.tag('wurm').end()
@@ -151,11 +151,11 @@ module.exports =
         xml.on 'end', æ.done
         xml.on 'data', (tag) -> æ.equal results.shift(), tag
         results = [
-            '<product>'
-            '→ → →<metadata>'
-            '→ → →→ → →<count value=4/>'
-            '→ → →</metadata>'
-            '</product>'
+            '<product>\n'
+            '→ → →<metadata>\n'
+            '→ → →→ → →<count value=4/>\n'
+            '→ → →</metadata>\n'
+            '</product>\n'
         ]
         product = xml.tag('product')
         æ.equal product.level, 0

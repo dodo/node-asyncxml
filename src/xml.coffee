@@ -1,5 +1,5 @@
 { EventEmitter } = require 'events'
-{ deep_merge, indent, new_attrs, safe } = require './util'
+{ deep_merge, prettify, new_attrs, safe } = require './util'
 EVENTS = ['add', 'attr', 'attr:remove', 'text', 'remove', 'close']
 
 
@@ -144,9 +144,9 @@ class Tag extends EventEmitter
     write: (content, {escape} = {}) =>
         content = safe(content) if escape
         if @isempty
-            @emit 'data', "#{indent this}<#{@name}#{new_attrs @attrs}>"
+            @emit 'data', prettify this, "<#{@name}#{new_attrs @attrs}>"
             @isempty = no
-        @emit 'data', "#{indent this}#{content}" if content
+        @emit 'data', prettify this, "#{content}" if content
         true
 
     up: () -> @builder # this node has no parent
@@ -158,12 +158,12 @@ class Tag extends EventEmitter
                 @closed = 'pending'
             else
                 if @isempty
-                    data = "#{indent this}<#{@name}#{new_attrs @attrs}/>"
+                    data = "<#{@name}#{new_attrs @attrs}/>"
                     @closed = 'self'
                 else
-                    data = "#{indent this}</#{@name}>"
+                    data = "</#{@name}>"
                     @closed = yes
-                @emit 'data', data
+                @emit 'data', prettify this, data
 
             @emit 'end' unless @closed is 'pending'
         else if @closed is 'removed'
