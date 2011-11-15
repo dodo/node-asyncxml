@@ -335,3 +335,29 @@ module.exports =
         counter++
         æ.equal counter, 5
 
+    'api events': (æ) ->
+        xml = new Builder
+        xml.on 'end', ->
+            æ.deepEqual results.add,   ['add',   "root", "childA", "childB"]
+            æ.deepEqual results.close, ['close', "childB", "childA", "root"]
+            æ.done()
+
+        results = add:['add'], close:['close']
+
+        xml.on 'add', (el) ->
+            results.add.push el.name
+        xml.on 'close', (el) ->
+            results.close.push el.name
+
+        root = xml.tag('root')
+        c = root.tag('childA')
+        c.tag('childB').end()
+        root.end()
+        c.end()
+        xml.end()
+
+
+
+
+
+
