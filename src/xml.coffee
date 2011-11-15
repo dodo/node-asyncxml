@@ -154,7 +154,6 @@ class Tag extends EventEmitter
     end: () =>
         if not @closed or @closed is 'pending'
             if @pending.length
-                @emit 'close', this if @closed isnt 'pending'
                 @closed = 'pending'
             else
                 if @isempty
@@ -165,7 +164,9 @@ class Tag extends EventEmitter
                     @closed = yes
                 @emit 'data', prettify this, data
 
-            @emit 'end' unless @closed is 'pending'
+            unless @closed is 'pending'
+                @emit 'close', this
+                @emit 'end'
         else if @closed is 'removed'
             @emit 'end'
         else
