@@ -361,6 +361,40 @@ module.exports =
         c.end()
         xml.end()
 
+    'after closed': (æ) ->
+        xml = new Builder
+        last = null
+        xml.on 'end', -> results.end++
+
+        results = add:['add'], close:['close'], end:0
+
+        done = ->
+            æ.deepEqual copyarr(results.add),   ['add',   "first", "middle", "last"]
+            #console.log copyarr results.close, results.close.length
+            æ.deepEqual copyarr(results.close), ['close', "first", "last", "middle"]
+#             for x in ['close', "first", "last", "middle"]
+#                 æ.equal results.close.shift(), x
+
+            æ.done()
+
+        xml.on 'add',   (tag) -> results.add.push tag.name
+        xml.on 'close', (tag) ->
+            results.close.push tag.name
+            #{name, closed, level} = tag
+            #console.log 'close',{name, closed, level, parent:tag.parent.name, builder:tag.builder.closed}
+            console.log 'close', tag.name
+
+        first = xml.tag('first')
+        first.end()
+        xml.end()
+
+        middle = first.$tag 'middle', ->
+            # should be allready closed here
+            æ.equal results.end, 1
+
+            @$tag('last', "content")
+            @on('end', done)
+
 
 
 
