@@ -2,6 +2,11 @@ path = require 'path'
 { createReadStream } = require 'fs'
 { Tag, Builder } = require '../asyncxml'
 
+# the problem is that at the point when an array is printed (eg, in an error) it
+# can differ from its original state, because something async happened after the
+# test is done (and before the error is printed).
+copyarr = (arr) -> Array.prototype.slice.call arr
+
 
 module.exports =
 
@@ -338,8 +343,8 @@ module.exports =
     'api events': (æ) ->
         xml = new Builder
         xml.on 'end', ->
-            æ.deepEqual results.add,   ['add',   "root", "childA", "childB"]
-            æ.deepEqual results.close, ['close', "childB", "childA", "root"]
+            æ.deepEqual copyarr(results.add),   ['add',   "root", "childA", "childB"]
+            æ.deepEqual copyarr(results.close), ['close', "childB", "childA", "root"]
             æ.done()
 
         results = add:['add'], close:['close']
