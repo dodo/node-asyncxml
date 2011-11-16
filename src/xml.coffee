@@ -30,11 +30,7 @@ new_tag = ->
     opts.builder = @builder
 
     @pending.push tag = new @builder.Tag name, attrs, null, opts
-
-    tag.up = (opts = {}) => # set parent
-        opts.end ?= true
-        tag.end.apply tag, arguments if opts.end
-        this
+    tag.parent = this
 
     tag.on 'data', events.data = (data) =>
         if @pending[0] is tag
@@ -97,6 +93,7 @@ class Tag extends EventEmitter
         @builder = opts.builder #or new Builder # inheritence
         @buffer = [] # after this tag all children emitted data
         @pending = [] # no open child tag
+        @parent = @builder
         @closed = false
         @writable = true
         @isempty = yes
@@ -149,7 +146,10 @@ class Tag extends EventEmitter
         @emit 'data', prettify this, "#{content}" if content
         true
 
-    up: () -> @builder # this node has no parent
+    up: (opts = {}) =>
+        opts.end ?= true
+        @end arguments... if opts.end
+        @parent
 
     end: () =>
         if not @closed or @closed is 'pending'
