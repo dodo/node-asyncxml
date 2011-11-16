@@ -103,6 +103,11 @@ class Tag extends EventEmitter
         @$tag = sync_tag
         @tag = new_tag
 
+    emit: =>
+        if @builder.closed is yes and @parent.closed is yes
+            @builder.emit arguments...
+        else super
+
     attr: (key, value) =>
         if typeof key is 'string'
             return @attrs[key] if @attrs[key] and not value
