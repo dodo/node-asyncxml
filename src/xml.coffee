@@ -72,6 +72,7 @@ new_tag = ->
             throw new Error("this shouldn't happen D:")
         return
 
+    @emit 'new', tag
     @emit 'add', tag
     tag.children children, opts if children?
     return tag
