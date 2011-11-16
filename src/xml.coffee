@@ -163,8 +163,6 @@ class Tag extends EventEmitter
                     data = "</#{@name}>"
                     @closed = yes
                 @emit 'data', prettify this, data
-
-            unless @closed is 'pending'
                 @emit 'close', this
                 @emit 'end'
         else if @closed is 'removed'
