@@ -110,7 +110,9 @@ class Tag extends EventEmitter
 
     attr: (key, value) =>
         if typeof key is 'string'
-            return @attrs[key] if @attrs[key] and not value
+            attr = @builder.query 'attr', this, key
+            if attr and not value?
+                return @attrs[key] = attr # sync it and return value
             @attrs[key] = value
             @emit 'attr', this, key, value
         else
@@ -138,7 +140,8 @@ class Tag extends EventEmitter
         this
 
     text: (content, opts = {}) =>
-        return @content unless content? or opts.force
+        unless content? or opts.force
+            return @content = @builder.query 'text', this
         content = safe(content) if opts.escape
         @write content, deep_merge(opts, escape:off) # dont double escape
         @content = content
@@ -217,6 +220,12 @@ class Builder extends EventEmitter
             @closed = yes
         this
 
+    # intern getter to let intern tag structure stay in sync with eg dom
+    query: (type, tag, key) ->
+        if type is 'attr'
+            tag.attr[key]
+        else if type is 'text'
+            tag.content
 
 # exports
 
