@@ -110,9 +110,10 @@ class Tag extends EventEmitter
 
     attr: (key, value) =>
         if typeof key is 'string'
-            attr = @builder.query 'attr', this, key
-            if attr and not value?
-                return @attrs[key] = attr # sync it and return value
+            if not value? and ((attr = @builder.query 'attr', this, key))?
+                # sync it and return value
+                @attrs[key] = attr
+                return attr
             @attrs[key] = value
             @emit 'attr', this, key, value
         else
@@ -223,7 +224,7 @@ class Builder extends EventEmitter
     # intern getter to let intern tag structure stay in sync with eg dom
     query: (type, tag, key) ->
         if type is 'attr'
-            tag.attr[key]
+            tag.attrs[key]
         else if type is 'text'
             tag.content
 
