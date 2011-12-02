@@ -145,8 +145,11 @@ class Tag extends EventEmitter
             return @content = @builder.query 'text', this
         content = safe(content) if opts.escape
         @write content, deep_merge(opts, escape:off) # dont double escape
-        @content = content
-        @emit 'text', this, content
+        if opts.append
+            @content += content
+        else
+            @content  = content
+        @emit 'text', this, @content
         this
 
     write: (content, {escape} = {}) =>
