@@ -125,6 +125,28 @@ module.exports =
         test.end()
         xml.end()
 
+    'advanced text ordering': (æ) ->
+        xml = new Builder
+        xml.on 'end', æ.done
+        xml.on 'data', (tag) -> æ.equal results.shift(), tag
+        results = [
+            '<text>'
+            'this is some '
+            '<a href="#">'
+            'random'
+            '</a>'
+            ' text'
+            '</text>'
+        ]
+        test = xml.tag('text')
+        test.text "this is some ", append:on
+        test.tag('a', href:'#', "random").end()
+        test.text " text", append:on
+        æ.equal test.text(), "this is some  text" # TODO should this contain children text as well?
+        test.end()
+        xml.end()
+
+
     attributes: (æ) ->
         xml = new Builder
         xml.on 'end', æ.done
