@@ -106,6 +106,24 @@ module.exports =
         test.end()
         xml.end()
 
+    'sequencial text': (æ) ->
+        xml = new Builder
+        xml.on 'end', æ.done
+        xml.on 'data', (tag) -> æ.equal results.shift(), tag
+        results = [
+            '<test>'
+            'in'
+            ' '
+            'here'
+            '</test>'
+        ]
+        test = xml.tag('test')
+        test.text "in",   append:on
+        test.text " ",    append:on
+        test.text "here", append:on
+        æ.equal test.text(), "in here"
+        test.end()
+        xml.end()
 
     attributes: (æ) ->
         xml = new Builder
