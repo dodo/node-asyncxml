@@ -29,53 +29,58 @@ new_tag = ->
     opts = deep_merge @builder.opts, opts # possibility to overwrite existing opts, like pretty
     opts.builder = @builder
 
-    @pending.push tag = new @builder.Tag name, attrs, null, opts
-    tag.parent = this
+    newtag = new @builder.Tag name, attrs, null, opts
+    newtag.parent = this
 
-    tag.on 'data', events.data = (data) =>
-        if @pending[0] is tag
-            @write data
-        else
-            @buffer.push data
+    # only when the builder approves the new tag we can proceed with announcing
+    # the new tag to the parent and to the tree and apply the childrenscope
+    @builder.approve this, newtag, (_, tag) =>
 
-    pipe = (event) =>
-        tag.on event, events[event] = =>
-            @emit event, arguments...
-    pipe event for event in EVENTS
-
-    tag.once 'end', on_end = =>
-        if @pending[0] is tag
-            if tag.pending.length
-                tag.pending[0].once 'end', on_end
+        tag.on 'data', events.data = (data) =>
+            if @pending[0] is tag
+                @write data
             else
-                if tag.buffer.length
-                    @buffer = @buffer.concat tag.buffer
-                    tag.buffer = []
-                @pending = @pending.slice(1)
-                rmevents.call tag, events
-                flush.call this
-                if @closed and @pending.length is 0
-                    @end()
-        else
-            for known, i in @pending
-                if tag is known
-                    @pending = @pending.slice(0,i).concat @pending.slice i+1
-                    if @buffer.length
-                        before = @pending[i-1]
-                        before.buffer = before.buffer.concat @buffer
-                        @buffer = []
-                    rmevents.call tag, events
-                    if @closed is 'pending'
-                        flush.call this
-                        @end()
-                    return
-            throw new Error("this shouldn't happen D:")
-        return
+                @buffer.push data
 
-    @emit 'new', tag
-    @emit 'add', tag
-    tag.children children, opts if children?
-    return tag
+        pipe = (event) =>
+            tag.on event, events[event] = =>
+                @emit event, arguments...
+        pipe event for event in EVENTS
+
+        tag.once 'end', on_end = =>
+            if @pending[0] is tag
+                if tag.pending.length
+                    tag.pending[0].once 'end', on_end
+                else
+                    if tag.buffer.length
+                        @buffer = @buffer.concat tag.buffer
+                        tag.buffer = []
+                    @pending = @pending.slice(1)
+                    rmevents.call tag, events
+                    flush.call this
+                    if @closed and @pending.length is 0
+                        @end()
+            else
+                for known, i in @pending
+                    if tag is known
+                        @pending = @pending.slice(0,i).concat @pending.slice i+1
+                        if @buffer.length
+                            before = @pending[i-1]
+                            before.buffer = before.buffer.concat @buffer
+                            @buffer = []
+                        rmevents.call tag, events
+                        if @closed is 'pending'
+                            flush.call this
+                            @end()
+                        return
+                throw new Error("this shouldn't happen D:")
+            return
+
+        @pending.push tag
+        @emit 'new', tag
+        @emit 'add', tag
+        tag.children children, opts if children?
+    return newtag # hopefully this is still the same after the approval
 
 sync_tag = ->
     [name, attrs, children, opts] = parse_args arguments...
@@ -202,12 +207,17 @@ class Tag extends EventEmitter
 
 class Builder extends EventEmitter
     constructor: (@opts = {}) ->
+        # values
         @builder = this
         @buffer = [] # for child output
-        @closed = no
         @pending = [] # no open child tag
+        @checkers = [] # all the middlewares that have to approve a new tag
+        # states
+        @closed = no
+        # defaults
         @opts.pretty ?= off
         @level = @opts.level ? -1
+        # api
         @Tag = Tag
         @tag = new_tag
         @$tag = sync_tag
@@ -230,6 +240,16 @@ class Builder extends EventEmitter
             tag.attrs[key]
         else if type is 'text'
             tag.content
+
+    use: (checker) ->
+        @checkers.push checker
+
+    approve: (parent, tag, callback) ->
+        checkers = @checkers.slice()
+        next = (tag) ->
+            checker = checkers.shift() ? callback
+            checker parent, tag, next
+        next(tag)
 
 # exports
 
