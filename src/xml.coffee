@@ -34,7 +34,7 @@ new_tag = ->
 
     # only when the builder approves the new tag we can proceed with announcing
     # the new tag to the parent and to the tree and apply the childrenscope
-    @builder.approve this, newtag, (_, tag) =>
+    @builder.approve 'new', this, newtag, (_, tag) =>
 
         tag.on 'data', events.data = (data) =>
             if @pending[0] is tag
@@ -175,20 +175,24 @@ class Tag extends EventEmitter
             if @pending.length
                 @closed = 'pending'
             else
-                if @isempty
-                    data = "<#{@name}#{new_attrs @attrs}/>"
-                    @closed = 'self'
-                else
-                    data = "</#{@name}>"
-                    @closed = yes
-                @emit 'data', prettify this, data
-                @emit 'close', this
-                @emit 'end'
+                @builder.approve 'end', this, =>
+                    if @isempty
+                        data = "<#{@name}#{new_attrs @attrs}/>"
+                        @closed = 'self'
+                    else
+                        data = "</#{@name}>"
+                        @closed = yes
+                    @emit 'data', prettify this, data
+                    @emit 'close', this
+                    @emit 'end'
+                    @writable = false
         else if @closed is 'removed'
-            @emit 'end'
+            @builder.approve 'end', this, =>
+                @emit 'end'
+                @writable = false
         else
             @closed = yes
-        @writable = false
+            @writable = false
         this
 
     toString: () =>
@@ -211,7 +215,7 @@ class Builder extends EventEmitter
         @builder = this
         @buffer = [] # for child output
         @pending = [] # no open child tag
-        @checkers = [] # all the middlewares that have to approve a new tag
+        @checkers = {} # all the middlewares that have to approve a new tag
         # states
         @closed = no
         # defaults
@@ -241,14 +245,28 @@ class Builder extends EventEmitter
         else if type is 'text'
             tag.content
 
-    use: (checker) ->
-        @checkers.push checker
+    register: (type, checker) ->
+        unless type is 'new' or type is 'end'
+            throw new Error "only type 'new' or 'end' allowed."
+        @checkers[type] ?= []
+        @checkers[type].push checker
 
-    approve: (parent, tag, callback) ->
-        checkers = @checkers.slice()
-        next = (tag) ->
-            checker = checkers.shift() ? callback
-            checker parent, tag, next
+    approve: (type, parent, tag, callback) ->
+        checkers = @checkers[type]?.slice?() ? []
+
+        if type is 'new'
+            next = (tag) ->
+                checker = checkers.shift() ? callback
+                checker(parent, tag, next)
+
+        else if type is 'end'
+            [callback, tag] = [tag, parent] # shift arguments
+            next = (tag) ->
+                checker = checkers.shift() ? callback
+                checker(tag, next)
+        else
+            throw new Error "type '#{type}' not supported."
+        # start
         next(tag)
 
 # exports
