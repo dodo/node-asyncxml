@@ -154,7 +154,7 @@ class Tag extends EventEmitter
             @content += content
         else
             @content  = content
-        @emit 'text', this, @content
+        @emit('text', this, @content)
         this
 
     write: (content, {escape} = {}) =>
@@ -171,10 +171,11 @@ class Tag extends EventEmitter
         @parent
 
     end: () =>
-        if not @closed or @closed is 'pending'
+        if not @closed or @closed is 'pending' or @closed is 'approving'
             if @pending.length
                 @closed = 'pending'
-            else
+            else if @closed isnt 'approving' # don't ask twice
+                @closed = 'approving'
                 @builder.approve 'end', this, =>
                     if @isempty
                         data = "<#{@name}#{new_attrs @attrs}/>"
@@ -187,9 +188,8 @@ class Tag extends EventEmitter
                     @emit 'end'
                     @writable = false
         else if @closed is 'removed'
-            @builder.approve 'end', this, =>
-                @emit 'end'
-                @writable = false
+            @emit 'end'
+            @writable = false
         else
             @closed = yes
             @writable = false
