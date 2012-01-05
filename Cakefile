@@ -29,8 +29,8 @@ task 'bundle', 'build a browser bundle', (options) ->
                     }).use(require 'scopify').bundle()
                 notify m[0], "successful browserify!"
                 filename = "#{m[1]}.browser.js"
-                writeFile filename, bundle, options
-                minifyScript filename, options
+                writeFile(filename, bundle, options).then ->
+                    minifyScript filename, options
 
 task 'build', 'compile && bundle', (options) ->
     timeout = 0
