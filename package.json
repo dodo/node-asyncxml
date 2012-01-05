@@ -8,15 +8,12 @@
 , "engines": {"node": ">= 0.4.x"}
 , "keywords": ["async", "xml", "generation", "stream", "browser"]
 , "scripts": {
-    "test": "node-waf build && nodeunit test",
-    "preinstall": "#preinstall DO NOTHING",
-    "install": "node-waf configure build",
-    "update": "node-waf build"}
-, "dependencies": {
+    "test": "cake build && nodeunit test",
+    "pre-publish": "cake build"}
+, "devDependencies": {
+    "coffee-script": ">= 1.1.2",
+    "muffin": ">= 0.2.6",
     "browserify": "1.6.1",
     "scopify": ">= 0.1.0",
-    "uglify-js": ">= 1.0.7",
-    "coffee-script": ">= 1.1.2"}
-, "devDependencies": {
     "nodeunit": ">= 0.5.4"}
 }
