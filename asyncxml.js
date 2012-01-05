@@ -1,2 +1,2 @@
 
-module.exports = require('./build/default/asyncxml')
+module.exports = require('./lib/asyncxml')
