@@ -348,7 +348,7 @@ module.exports =
         ]
 
         file = xml.tag('file')
-        stream = createReadStream path.join(__dirname,"..","..","..","filename")
+        stream = createReadStream path.join(__dirname, "..", "filename")
         stream.pipe(file)
         xml.end()
 
