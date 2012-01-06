@@ -9,7 +9,7 @@
 , "keywords": ["async", "xml", "generation", "stream", "browser"]
 , "scripts": {
     "test": "cake build && nodeunit test",
-    "pre-publish": "cake build"}
+    "prepublish": "cake build"}
 , "devDependencies": {
     "coffee-script": ">= 1.1.2",
     "muffin": ">= 0.2.6",
