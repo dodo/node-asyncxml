@@ -1,6 +1,6 @@
 { EventEmitter } = require 'events'
 { deep_merge, prettify, new_attrs, safe } = require './util'
-EVENTS = ['add', 'attr', 'attr:remove', 'text', 'remove', 'close']
+EVENTS = ['add','attr','attr:remove','text','raw','remove','close']
 
 
 parse_args = (name, attrs, children, opts) ->
@@ -155,6 +155,11 @@ class Tag extends EventEmitter
         else
             @content  = content
         @emit('text', this, @content)
+        this
+
+    raw: (html, opts = {}) =>
+        @write html, deep_merge(opts, escape:off) # this is raw html, so no escape
+        @emit('raw', this, html)
         this
 
     write: (content, {escape} = {}) =>
