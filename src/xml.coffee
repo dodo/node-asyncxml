@@ -1,6 +1,7 @@
 { EventEmitter } = require 'events'
 { deep_merge, prettify, new_attrs, safe } = require './util'
-EVENTS = ['add','attr','attr:remove','text','raw','remove','close']
+EVENTS = ['add', 'attr', 'attr:remove', 'text', 'raw', 'show', 'hide', 'remove',
+          'close']
 
 
 parse_args = (name, attrs, children, opts) ->
@@ -102,6 +103,7 @@ class Tag extends EventEmitter
         @parent = @builder
         @closed = false
         @writable = true
+        @hidden = no
         @isempty = yes
         @content = ""
         @children children, opts
@@ -164,6 +166,7 @@ class Tag extends EventEmitter
 
     write: (content, {escape} = {}) =>
         content = safe(content) if escape
+        return true if @hidden # dont emit data when this tag is hidden
         if @isempty
             @emit 'data', prettify this, "<#{@name}#{new_attrs @attrs}>"
             @isempty = no
@@ -174,6 +177,16 @@ class Tag extends EventEmitter
         opts.end ?= true
         @end arguments... if opts.end
         @parent
+
+    show: () =>
+        @hidden = no
+        @emit 'show', this
+        this
+
+    hide: () =>
+        @hidden = yes
+        @emit 'hide', this
+        this
 
     end: () =>
         if not @closed or @closed is 'pending' or @closed is 'approving'
@@ -188,7 +201,7 @@ class Tag extends EventEmitter
                     else
                         data = "</#{@name}>"
                         @closed = yes
-                    @emit 'data', prettify this, data
+                    @emit 'data', prettify this, data unless @hidden
                     @emit 'close', this
                     @emit 'end'
                     @writable = false
