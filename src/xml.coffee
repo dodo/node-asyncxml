@@ -1,7 +1,7 @@
 { EventEmitter } = require 'events'
 { deep_merge, prettify, new_attrs, safe } = require './util'
 EVENTS = ['add', 'attr', 'attr:remove', 'text', 'raw', 'show', 'hide', 'remove',
-          'close']
+          'replace', 'close']
 
 
 parse_args = (name, attrs, children, opts) ->
@@ -219,6 +219,12 @@ class Tag extends EventEmitter
                 "/>"
             else if @closed
                 ">#{@content}</#{@name}>" # FIXME children ?
+
+    replace: (tag) =>
+        # FIXME should happen smthing smart?
+        # should both instances become one? when yes, how?
+        @emit 'replace', this, tag
+        this
 
     remove: () =>
         @closed = 'removed' unless @closed
