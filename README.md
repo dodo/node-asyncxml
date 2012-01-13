@@ -1,4 +1,6 @@
 # async XML Generator
+> performance? foock it! i'm faster than that.
+
 
 todo
 
