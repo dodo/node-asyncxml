@@ -94,7 +94,7 @@ class Tag extends EventEmitter
     constructor: ->
         [@name, @attrs, children, opts] = parse_args arguments...
         @pretty = opts.pretty ? off
-        @level = opts.level
+        @level = opts.level ? 0
         @builder = opts.builder #or new Builder # inheritence
         @buffer = [] # after this tag all children emitted data
         @pending = [] # no open child tag
