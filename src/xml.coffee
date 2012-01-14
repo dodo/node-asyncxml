@@ -22,7 +22,9 @@ add_tag = (newtag, callback) ->
     return callback?.call(this) unless newtag?
     # only when the builder approves the new tag we can proceed with announcing
     # the new tag to the parent and to the tree and apply the childrenscope
-    @builder.approve 'new', this, newtag, (_, tag) =>
+    wire_tag = (_, tag) =>
+        tag.builder ?= @builder
+        tag.parent  ?= this
 
         tag.on? 'data', (data) =>
             if @pending[0] is tag
@@ -67,14 +69,21 @@ add_tag = (newtag, callback) ->
         tag.emit? 'close', tag if tag.closed
         callback?.call(this, tag)
 
+    if @builder?
+        @builder.approve('new', this, newtag, wire_tag)
+    else
+        wire_tag(this, newtag)
+
 new_tag = ->
     [name, attrs, children, opts] = parse_args arguments...
     opts.level ?= @level+1
 
-    opts = deep_merge @builder.opts, opts # possibility to overwrite existing opts, like pretty
+    # possibility to overwrite existing opts, like pretty
+    opts = deep_merge (@builder?.opts ? {}), opts
     opts.builder = @builder
 
-    newtag = new @builder.Tag name, attrs, null, opts
+    TagInstance = @builder?.Tag ? Tag
+    newtag = new TagInstance name, attrs, null, opts
     newtag.parent = this
     add_tag.call this, newtag, (tag) ->
         @emit 'new', tag
@@ -95,7 +104,7 @@ class Tag extends EventEmitter
         [@name, @attrs, children, opts] = parse_args arguments...
         @pretty = opts.pretty ? off
         @level = opts.level ? 0
-        @builder = opts.builder #or new Builder # inheritence
+        @builder = opts.builder # inheritence
         @buffer = [] # after this tag all children emitted data
         @pending = [] # no open child tag
         @parent = @builder
@@ -109,13 +118,13 @@ class Tag extends EventEmitter
         @tag = new_tag
 
     emit: =>
-        if @builder.closed is yes and @parent.closed is yes
+        if @builder?.closed is yes and @parent?.closed is yes
             @builder.emit arguments...
         else super
 
     attr: (key, value) =>
         if typeof key is 'string'
-            if not value? and ((attr = @builder.query 'attr', this, key))?
+            if not value? and ((attr = @builder?.query 'attr', this, key))?
                 # sync it and return value
                 @attrs[key] = attr
                 return attr
@@ -147,7 +156,7 @@ class Tag extends EventEmitter
 
     text: (content, opts = {}) =>
         unless content?
-            return @content = @builder.query 'text', this
+            return @content = @builder?.query 'text', this
         content = safe(content) if opts.escape
         @write content, deep_merge(opts, escape:off) # dont double escape
         if opts.append
@@ -192,7 +201,7 @@ class Tag extends EventEmitter
                 @closed = 'pending'
             else if @closed isnt 'approving' # don't ask twice
                 @closed = 'approving'
-                @builder.approve 'end', this, =>
+                close_tag = =>
                     if @isempty
                         data = "<#{@name}#{new_attrs @attrs}/>"
                         @closed = 'self'
@@ -203,6 +212,10 @@ class Tag extends EventEmitter
                     @emit 'close', this
                     @emit 'end'
                     @writable = false
+                if @builder?
+                    @builder.approve('end', this, close_tag)
+                else
+                    close_tag(this, this)
         else if @closed is 'removed'
             @emit 'end'
             @writable = false
@@ -219,7 +232,8 @@ class Tag extends EventEmitter
                 ">#{@content}</#{@name}>" # FIXME children ?
 
     add: (rawtag, callback) =>
-        tag = @builder.query 'tag', this, rawtag
+        tag = @builder?.query 'tag', this, rawtag
+        tag = rawtag unless tag? or @builder?
         unless tag?
             callback?.call(this)
             return this
