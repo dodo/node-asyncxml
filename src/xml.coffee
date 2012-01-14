@@ -18,10 +18,6 @@ flush = ->
         @write data for data in @buffer
         @buffer = []
 
-rmevents = (events) ->
-    @removeListener 'data', events.data
-    @removeListener event, events[event] for event in EVENTS
-
 add_tag = (newtag, callback) ->
     return callback?.call(this) unless newtag?
     # only when the builder approves the new tag we can proceed with announcing
@@ -48,7 +44,6 @@ add_tag = (newtag, callback) ->
                         @buffer = @buffer.concat tag.buffer
                         tag.buffer = []
                     @pending = @pending.slice(1)
-                    rmevents.call tag, events
                     flush.call this
                     if @closed and @pending.length is 0
                         @end()
@@ -60,7 +55,6 @@ add_tag = (newtag, callback) ->
                             before = @pending[i-1]
                             before.buffer = before.buffer.concat @buffer
                             @buffer = []
-                        rmevents.call tag, events
                         if @closed is 'pending'
                             flush.call this
                             @end()
