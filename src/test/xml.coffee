@@ -389,7 +389,7 @@ module.exports =
 
         results = add:['add'], close:['close']
 
-        xml.on 'add', (el) ->
+        xml.on 'add', (par, el) ->
             results.add.push el.name
         xml.on 'close', (el) ->
             results.close.push el.name
@@ -417,7 +417,7 @@ module.exports =
 
             æ.done()
 
-        xml.on 'add',   (tag) -> results.add.push tag.name
+        xml.on 'add',   (par, tag) -> results.add.push tag.name
         xml.on 'close', (tag) ->
             results.close.push tag.name
             #{name, closed, level} = tag

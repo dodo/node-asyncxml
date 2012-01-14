@@ -22,33 +22,24 @@ rmevents = (events) ->
     @removeListener 'data', events.data
     @removeListener event, events[event] for event in EVENTS
 
-new_tag = ->
-    [name, attrs, children, opts] = parse_args arguments...
-    events = {}
-    opts.level ?= @level+1
-
-    opts = deep_merge @builder.opts, opts # possibility to overwrite existing opts, like pretty
-    opts.builder = @builder
-
-    newtag = new @builder.Tag name, attrs, null, opts
-    newtag.parent = this
-
+add_tag = (newtag, callback) ->
+    return callback?.call(this) unless newtag?
     # only when the builder approves the new tag we can proceed with announcing
     # the new tag to the parent and to the tree and apply the childrenscope
     @builder.approve 'new', this, newtag, (_, tag) =>
 
-        tag.on 'data', events.data = (data) =>
+        tag.on? 'data', (data) =>
             if @pending[0] is tag
                 @write data
             else
                 @buffer.push data
 
         pipe = (event) =>
-            tag.on event, events[event] = =>
+            tag.on? event, =>
                 @emit event, arguments...
         pipe event for event in EVENTS
 
-        tag.once 'end', on_end = =>
+        tag.once? 'end', on_end = =>
             if @pending[0] is tag
                 if tag.pending.length
                     tag.pending[0].once 'end', on_end
@@ -77,9 +68,22 @@ new_tag = ->
                 throw new Error("this shouldn't happen D:")
             return
 
-        @pending.push tag
+        @pending.push tag if tag.closed is no
+        @emit 'add', this, tag
+        tag.emit? 'close', tag if tag.closed
+        callback?.call(this, tag)
+
+new_tag = ->
+    [name, attrs, children, opts] = parse_args arguments...
+    opts.level ?= @level+1
+
+    opts = deep_merge @builder.opts, opts # possibility to overwrite existing opts, like pretty
+    opts.builder = @builder
+
+    newtag = new @builder.Tag name, attrs, null, opts
+    newtag.parent = this
+    add_tag.call this, newtag, (tag) ->
         @emit 'new', tag
-        @emit 'add', tag
         tag.children children, opts if children?
     return newtag # hopefully this is still the same after the approval
 
@@ -220,6 +224,15 @@ class Tag extends EventEmitter
             else if @closed
                 ">#{@content}</#{@name}>" # FIXME children ?
 
+    add: (rawtag, callback) =>
+        tag = @builder.query 'tag', this, rawtag
+        unless tag?
+            callback?.call(this)
+            return this
+        # TODO query result validation
+        add_tag.call(this, tag, callback)
+        this
+
     replace: (tag) =>
         # FIXME should happen smthing smart?
         # should both instances become one? when yes, how?
@@ -268,6 +281,8 @@ class Builder extends EventEmitter
             tag.attrs[key]
         else if type is 'text'
             tag.content
+        else if type is 'tag'
+            key # this should be a tag
 
     register: (type, checker) ->
         unless type is 'new' or type is 'end'
