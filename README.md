@@ -4,6 +4,7 @@
 > performance? foock it! i'm faster than that.
 
 async xml builder and generator
+
 nukular engine of [Δt](http://dodo.github.com/node-dynamictemplate/)
 
 Runs on server and browser side (same code).
@@ -66,6 +67,7 @@ xml = new asyncxml.Builder({pretty:true})
  * `opts.level` start indention level of xml (starting with `-1`) when pretty is on
 
 Use this to build and grow a XML forest.
+
 The Builder provides a single environment for many tags and an API for Adapters to interact with the tag events.
 
 ### xml.tag(name, [attrs, [children, [opts]]])
@@ -114,8 +116,11 @@ xml.register('end', function (tag, next) {
 })
 ```
 This is a plugin API method.
+
 There are only 2 types: `["new", "end"]`.
+
 The `checkfn` function of type `new` must get 3 parameters: `(parent, tag, next)`.
+
 The `checkfn` function of type `end` must get 2 parameters: `(tag, next)`.
 
 The [Δt Compiler](http://dodo.github.com/node-dt-compiler/) uses this API to create new tags before others.
@@ -134,7 +139,9 @@ tag.attr('id')
 tag.add(adapter_specific_object)
 ```
 This is a adapter API method.
+
 Every time a text, an attribute or a tag is requested the tag will ask the builder for the values. A adapter has now the opportunity to override the `query` method of the builder instance to provide a specialised query method.
+
 The [jQuery Adapter](https://github.com/dodo/node-dt-jquery) for example uses it to provide the values right out of the DOM (eg for type text it returns the value of [jQuery.text](http://api.jquery.com/text/)).
 
 
@@ -182,6 +189,7 @@ tag.$tag("tag", "content").toString()
 // both => '<tag>content</tag>'
 ```
 This returns the String representation of the tag when its closed.
+
 It only contains text content, no children tags, because tags are garbage collected when their not in use anymore.
 
 
@@ -195,7 +203,9 @@ tag.children(function () {
 tag.children("content") // same as tag.text("content")
 ```
 This applies a children scope on a tag.
+
 The tag instance directly accessible via `this`.
+
 The children parameter of `Tag::tag` is passed to this method.
 
 Emits whatever event is emitted inside the children scope (of course).
@@ -208,6 +218,7 @@ tag.up()
 tag.up({end:false}) // don't close tag
 ```
 Useful for chaining, because it returns the parent tag.
+
 It closes the tag by default unless `opts.end` is set to false.
 
 Can emit an `end` Event.
@@ -222,6 +233,7 @@ tag.add(other)
 Append a new Tag.
 
 Adapter specific objects can be passed too.
+
 For example if you use the [jQuery Adapter](https://github.com/dodo/node-dt-jquery) you can pass a jQuery Object as parameter.
 
 Emits an `add` Event.
@@ -234,6 +246,7 @@ other = new asyncxml.Tag("other")
 tag.replace(other)
 ```
 Replace a tag with another one.
+
 __todo__ merge tag instances on data model level
 
 Emits a `replace` Event.
@@ -261,6 +274,7 @@ tag.attr({id:4}) // set many attributes at once
 Set or Get tag attributes.
 
 When using an adapter getting an attribute results in a value provided by the adapter.
+
 e.g. if you use the [jQuery Adapter](https://github.com/dodo/node-dt-jquery) the resulting value is the return value of [jQuery.attr](http://api.jquery.com/attr/).
 
 Emits an `attr` Event.
@@ -287,6 +301,7 @@ Set or Get tag text content.
 Emits a `text` and `data` Event.
 
 When using an adapter getting text results in the content provided by the adapter.
+
 e.g. if you use the [jQuery Adapter](https://github.com/dodo/node-dt-jquery) the resulting text is the return value of [jQuery.text](http://api.jquery.com/text/).
 
 
@@ -307,6 +322,7 @@ fs = require('fs')
 fs.createReadStream(filename).pipe(tag)
 ```
 Write tag data.
+
 Useful to pipe file content into a tag (as text).
 (dunno what happens if you pipe binary through)
 
@@ -319,6 +335,7 @@ Emits a `data` Event.
 tag.hide()
 ```
 Hide a tag.
+
 When a tag is hidden, `data` events are omitted.
 
 Emits a `hide` Event.
@@ -330,6 +347,7 @@ Emits a `hide` Event.
 tag.show()
 ```
 Show a tag.
+
 Reverses the effect from `Tag::hide`.
 
 Emits a `show` Event.
@@ -341,7 +359,9 @@ Emits a `show` Event.
 tag.end()
 ```
 Closes a tag.
+
 The `end` event will only appear when all children tags are closed.
+
 The `close` event gets triggered when the closing part of the tag (`</tag>`) gets emitted.
 
 Emits an `end` and a `close` Event.
@@ -351,6 +371,7 @@ Emits an `end` and a `close` Event.
 ## events
 
 Some events have special behavior when it comes to where they can be received.
+
 Most events travel up the XML tree, some can be only received on their parents.
 
 ### global
@@ -361,6 +382,7 @@ Most events travel up the XML tree, some can be only received on their parents.
 These events can be received from every single tag.
 
 When you listen on a *specific tag* you get these events from the tag you are listening on and from all the children tags (recursive).
+
 When you listen on a *builder instance* you get all events from all tags.
 
 ### local
@@ -371,8 +393,11 @@ When you listen on a *builder instance* you get all events from all tags.
 These events can be received from every single tag.
 
 When you listen for `new` on a *specific tag* you get 'new' events from only the tag you are listening on and from all its direct children (only 1 level deep).
+
 When you listen for `new` on a *builder instance* you get 'new' events for all the tags that are created direclty on the builder.
+
 When you listen for `end` on a *specific tag* you get the 'end' event only from the tag you are listening on.
+
 When you listen for `end` on a *builder instance* you get the 'end' event when the last tag is closed.
 
 
