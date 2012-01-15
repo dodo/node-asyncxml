@@ -20,6 +20,7 @@ xml = new asyncxml.Builder({pretty:true})
 xml.on('data', function (chunk) {
     console.log(chunk);
 })
+// build some xml
 xml.tag("xml", {version:"1.0"})
         .tag("list")
             .tag("entry", function () {
@@ -29,6 +30,16 @@ xml.tag("xml", {version:"1.0"})
         .up()
     .up()
 .end()
+```
+
+```coffeescript
+# this would result in the same xml
+xml.tag "xml", version:"1.0", ->
+    @$tag "list", ->
+        @$tag "entry", ->
+            @attr('id', 1)
+        @$tag "entry", id:2, "foo"
+    @up().end()
 ```
 
 ```xml
