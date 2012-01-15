@@ -162,6 +162,7 @@ Emits a `remove` Event.
 tag.attr() // results in an js object containing all tag attributes
 tag.attr("id") // results in the value of attribute "id"
 tag.attr("id", 3) // set attribute "id" to 3 and returns the tag instance for chaining
+tag.attr({id:4}) // set many attributes at once
 ```
 Set or Get tag attributes.
 
