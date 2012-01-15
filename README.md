@@ -12,12 +12,43 @@ Runs on server and browser side (same code).
 
     npm install asyncxml
 
+## usage
+
+```javascript
+asyncxml = require('asyncxml')
+xml = new asyncxml.Builder({pretty:true})
+xml.on('data', function (chunk) {
+    console.log(chunk);
+})
+xml.tag("xml", {version:"1.0"})
+        .tag("list")
+            .tag("entry", function () {
+                this.attr('id', 1)
+            }).up()
+            .tag("entry", {id:2}, "foo").up()
+        .up()
+    .up()
+.end()
+```
+
+```xml
+<!-- stdout -->
+<xml version="1.0">
+  <list>
+    <entry id=1/>
+    <entry id=2>
+    foo
+    </entry>
+  </list>
+</xml>
+
+```
+
 ## api
 
 ### Tag(name, [attrs, [children, [opts]]])
 
 ```javascript
-asyncxml = require('asyncxml')
 tag = new asyncxml.Tag("xml", {version:"1.0"}, function() { … }, opts)
 ```
  * `name` the [nodeName](https://developer.mozilla.org/en/DOM:element.nodeName)
