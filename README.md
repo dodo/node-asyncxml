@@ -57,6 +57,86 @@ xml.tag "xml", version:"1.0", ->
 
 ## api
 
+### Builder([opts])
+
+```javascript
+xml = new asyncxml.Builder({pretty:true})
+```
+ * `opts.pretty` switch to toggle pretty printing of the xml output
+ * `opts.level` start indention level of xml (starting with `-1`) when pretty is on
+
+Use this to build and grow a XML forest.
+The Builder provides a single environment for many tags and an API for Adapters to interact with the tag events.
+
+### xml.tag(name, [attrs, [children, [opts]]])
+
+```javascript
+tag.tag("xml", {version:"1.0"}, function() { … })
+```
+Same as `Tag::tag`.
+
+
+### xml.$tag(name, [attrs, [children, [opts]]])
+
+```javascript
+tag.$tag("xml", {version:"1.0"}, function() { … })
+```
+Same as `Tag::$tag`.
+
+
+### xml.write(data)
+
+```javascript
+fs = require('fs')
+fs.createReadStream(filename).pipe(xml)
+```
+Same as `Tag::write`.
+
+
+### xml.end()
+
+```javascript
+xml.end()
+```
+Same as `Tag::end` but without a `close` event.
+
+
+### xml.register(type, checkfn)
+
+```javascript
+xml.register('new', function (parent, tag, next) {
+    // this gets called _before_ every new tag gets announced ('new' and 'add' event)
+    next(tag) // call next with the new tag to approve that the new tag can be announced
+})
+xml.register('end', function (tag, next) {
+    // this gets called _before_ every gets closed
+    next(tag) // call next with the closing tag to approve that the tag can be closed
+})
+```
+This is a plugin API method.
+There are only 2 types: `["new", "end"]`.
+The `checkfn` function of type `new` must get 3 parameters: `(parent, tag, next)`.
+The `checkfn` function of type `end` must get 2 parameters: `(tag, next)`.
+
+### xml.approve(type, parent, tag, callback)
+
+This is an internal API method to invoke a `checkfn` list registered with `Builder::register` by plugins.
+
+
+### xml.query(type, tag, key)
+
+```javascript
+tag.text()
+tag.attr('id')
+tag.add(adapter_specific_object)
+```
+This is a adapter API method.
+Every time a text, an attribute or a tag is requested the tag will ask the builder for the values. A adapter has now the opportunity to override the `query` method of the builder instance to provide a specialised query method.
+The [jQuery Adapter](https://github.com/dodo/node-dt-jquery) for example uses it to provide the values right out of the DOM (eg for type text it returns the value of [jQuery.text](http://api.jquery.com/text/)).
+
+
+---
+
 ### Tag(name, [attrs, [children, [opts]]])
 
 ```javascript
