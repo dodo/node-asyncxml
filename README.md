@@ -352,7 +352,9 @@ Most events travel up the XML tree, some can be only received on their parents.
 
 ### global
 
-    ['add', 'attr', 'attr:remove', 'text', 'raw', 'data', 'show', 'hide', 'remove', 'replace', 'close']
+```javascript
+['add', 'attr', 'attr:remove', 'text', 'raw', 'data', 'show', 'hide', 'remove', 'replace', 'close']
+````
 These events can be received from every single tag.
 
 When you listen on a *specific tag* you get these events from the tag you are listening on and from all the children tags (recursive).
@@ -360,7 +362,9 @@ When you listen on a *builder instance* you get all events from all tags.
 
 ### local
 
-    ['new', 'end']
+```javascript
+['new', 'end']
+```
 These events can be received from every single tag.
 
 When you listen for `new` on a *specific tag* you get 'new' events from only the tag you are listening on and from all its direct children (only 1 level deep).
