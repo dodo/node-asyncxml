@@ -343,11 +343,32 @@ The `close` event gets triggered when the closing part of the tag (`</tag>`) get
 
 Emits an `end` and a `close` Event.
 
+---
+
+## events
+
+Some events have special behavior when it comes to where they can be received.
+Most events travel up the XML tree, some can be only received on their parents.
+
+### global
+
+    ['add', 'attr', 'attr:remove', 'text', 'raw', 'data', 'show', 'hide', 'remove', 'replace', 'close']
+These events can be received from every single tag.
+
+When you listen on a *specific tag* you get these events from the tag you are listening on and from all the children tags (recursive).
+When you listen on a *builder instance* you get all events from all tags.
+
+### local
+
+    ['new', 'end']
+These events can be received from every single tag.
+
+When you listen for `new` on a *specific tag* you get 'new' events from only the tag you are listening on and from all its direct children (only 1 level deep).
+When you listen for `new` on a *builder instance* you get 'new' events for all the tags that are created direclty on the builder.
+When you listen for `end` on a *specific tag* you get the 'end' event only from the tag you are listening on.
+When you listen for `end` on a *builder instance* you get the 'end' event when the last tag is closed.
 
 
-
-
-todo
 
 
 [![Build Status](https://secure.travis-ci.org/dodo/node-asyncxml.png)](http://travis-ci.org/dodo/node-asyncxml)
