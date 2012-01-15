@@ -1,5 +1,5 @@
 
-# async XML Generator
+# [async XML Generator](https://github.com/dodo/node-asyncxml)
 
 > performance? foock it! i'm faster than that.
 
