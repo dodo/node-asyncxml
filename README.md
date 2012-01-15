@@ -118,6 +118,9 @@ There are only 2 types: `["new", "end"]`.
 The `checkfn` function of type `new` must get 3 parameters: `(parent, tag, next)`.
 The `checkfn` function of type `end` must get 2 parameters: `(tag, next)`.
 
+The [Δt Compiler](http://dodo.github.com/node-dt-compiler/) uses this API to create new tags before others.
+
+
 ### xml.approve(type, parent, tag, callback)
 
 This is an internal API method to invoke a `checkfn` list registered with `Builder::register` by plugins.
