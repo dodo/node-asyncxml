@@ -70,7 +70,7 @@ Use this to build and grow a XML forest.
 
 The Builder provides a single environment for many tags and an API for Adapters to interact with the tag events.
 
-### xml.tag(name, [attrs, [children, [opts]]])
+#### xml.tag(name, [attrs, [children, [opts]]])
 
 ```javascript
 tag.tag("xml", {version:"1.0"}, function() { … })
@@ -78,7 +78,7 @@ tag.tag("xml", {version:"1.0"}, function() { … })
 Same as `Tag::tag`.
 
 
-### xml.$tag(name, [attrs, [children, [opts]]])
+#### xml.$tag(name, [attrs, [children, [opts]]])
 
 ```javascript
 tag.$tag("xml", {version:"1.0"}, function() { … })
@@ -86,7 +86,7 @@ tag.$tag("xml", {version:"1.0"}, function() { … })
 Same as `Tag::$tag`.
 
 
-### xml.write(data)
+#### xml.write(data)
 
 ```javascript
 fs = require('fs')
@@ -95,7 +95,7 @@ fs.createReadStream(filename).pipe(xml)
 Same as `Tag::write`.
 
 
-### xml.end()
+#### xml.end()
 
 ```javascript
 xml.end()
@@ -103,7 +103,7 @@ xml.end()
 Same as `Tag::end` but without a `close` event.
 
 
-### xml.register(type, checkfn)
+#### xml.register(type, checkfn)
 
 ```javascript
 xml.register('new', function (parent, tag, next) {
@@ -126,12 +126,12 @@ The `checkfn` function of type `end` must get 2 parameters: `(tag, next)`.
 The [Δt Compiler](http://dodo.github.com/node-dt-compiler/) uses this API to create new tags before others.
 
 
-### xml.approve(type, parent, tag, callback)
+#### xml.approve(type, parent, tag, callback)
 
 This is an internal API method to invoke a `checkfn` list registered with `Builder::register` by plugins.
 
 
-### xml.query(type, tag, key)
+#### xml.query(type, tag, key)
 
 ```javascript
 tag.text()
@@ -160,7 +160,7 @@ tag = new asyncxml.Tag("xml", {version:"1.0"}, function() { … }, opts)
 Normally you don't need to instantiate this, because you should use `Tag::tag` and `Builder::tag` instead.
 
 
-### tag.tag(name, [attrs, [children, [opts]]])
+#### tag.tag(name, [attrs, [children, [opts]]])
 
 ```javascript
 tag.tag("name", {attrs:null}, function() { … })
@@ -171,7 +171,7 @@ __info__ tag is not closed.
 Emits a `new` and `add` Event.
 
 
-### tag.$tag(name, [attrs, [children, [opts]]])
+#### tag.$tag(name, [attrs, [children, [opts]]])
 
 ```javascript
 tag.$tag("sync", function() { … })
@@ -181,7 +181,7 @@ Same api as `Tag`, with one difference: `tag.end()` is called right after the ch
 Emits a `new`, `add` and `end` Event (end is emitted after the children scope).
 
 
-### tag.toString()
+#### tag.toString()
 
 ```javascript
 tag.$tag("tag", "content").toString()
@@ -193,7 +193,7 @@ This returns the String representation of the tag when its closed.
 It only contains text content, no children tags, because tags are garbage collected when their not in use anymore.
 
 
-### tag.children(childrenscope)
+#### tag.children(childrenscope)
 
 ```javascript
 tag.children(function () {
@@ -211,7 +211,7 @@ The children parameter of `Tag::tag` is passed to this method.
 Emits whatever event is emitted inside the children scope (of course).
 
 
-### tag.up([opts])
+#### tag.up([opts])
 
 ```javascript
 tag.up()
@@ -224,7 +224,7 @@ It closes the tag by default unless `opts.end` is set to false.
 Can emit an `end` Event.
 
 
-### tag.add(newtag)
+#### tag.add(newtag)
 
 ```javascript
 other = new asyncxml.Tag("other")
@@ -239,7 +239,7 @@ For example if you use the [jQuery Adapter](https://github.com/dodo/node-dt-jque
 Emits an `add` Event.
 
 
-### tag.replace(newtag)
+#### tag.replace(newtag)
 
 ```javascript
 other = new asyncxml.Tag("other")
@@ -252,7 +252,7 @@ __todo__ merge tag instances on data model level
 Emits a `replace` Event.
 
 
-### tag.remove()
+#### tag.remove()
 
 ```javascript
 tag.remove()
@@ -263,7 +263,7 @@ The tag gets automatically closed.
 Emits a `remove` Event.
 
 
-### tag.attr([key, [value]])
+#### tag.attr([key, [value]])
 
 ```javascript
 tag.attr() // results in an js object containing all tag attributes
@@ -280,7 +280,7 @@ e.g. if you use the [jQuery Adapter](https://github.com/dodo/node-dt-jquery) the
 Emits an `attr` Event.
 
 
-### tag.removeAttr(key)
+#### tag.removeAttr(key)
 
 ```javascript
 tag.removeAttr("id")
@@ -290,7 +290,7 @@ Remove a specific attribute by key.
 Emits an `attr:remove` Event.
 
 
-### tag.text([content])
+#### tag.text([content, [opts]])
 
 ```javascript
 tag.text() // get text of a tag
@@ -305,17 +305,18 @@ When using an adapter getting text results in the content provided by the adapte
 e.g. if you use the [jQuery Adapter](https://github.com/dodo/node-dt-jquery) the resulting text is the return value of [jQuery.text](http://api.jquery.com/text/).
 
 
-### tag.raw(html)
+#### tag.raw(html, [opts])
 
 ```javascript
 tag.raw("<div>notfunny</div>")
 ```
 Insert raw html content into a tag.
 
+
 Emits a `raw` and `data` Event.
 
 
-### tag.write(data, [opts])
+#### tag.write(data, [opts])
 
 ```javascript
 fs = require('fs')
@@ -329,7 +330,7 @@ Useful to pipe file content into a tag (as text).
 Emits a `data` Event.
 
 
-### tag.hide()
+#### tag.hide()
 
 ```javascript
 tag.hide()
@@ -341,7 +342,7 @@ When a tag is hidden, `data` events are omitted.
 Emits a `hide` Event.
 
 
-### tag.show()
+#### tag.show()
 
 ```javascript
 tag.show()
@@ -353,7 +354,7 @@ Reverses the effect from `Tag::hide`.
 Emits a `show` Event.
 
 
-### tag.end()
+#### tag.end()
 
 ```javascript
 tag.end()
