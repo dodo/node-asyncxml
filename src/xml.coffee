@@ -108,9 +108,10 @@ class Tag extends EventEmitter
         @buffer = [] # after this tag all children emitted data
         @pending = [] # no open child tag
         @parent = @builder
-        @closed = false
+        @closed = no
         @writable = true
         @hidden = no
+        @isready = no
         @isempty = yes
         @content = ""
         @children children, opts
@@ -212,6 +213,13 @@ class Tag extends EventEmitter
                     @emit 'close', this
                     @emit 'end'
                     @writable = false
+                    set_ready = =>
+                        @isready = yes
+                        @emit 'ready'
+                    if @builder?
+                        @builder.approve('ready', this, set_ready)
+                    else
+                        set_ready()
                 if @builder?
                     @builder.approve('end', this, close_tag)
                 else
@@ -252,6 +260,9 @@ class Tag extends EventEmitter
         @emit 'remove', this
         this
 
+    ready: (callback) =>
+        return callback?.call(this) if @isready
+        @once 'ready', callback
 
 
 class Builder extends EventEmitter
@@ -283,6 +294,10 @@ class Builder extends EventEmitter
             @closed = yes
         this
 
+    ready: (callback) =>
+        return callback?() if @closed is yes
+        @once 'end', callback
+
     # intern getter to let intern tag structure stay in sync with eg dom
     query: (type, tag, key) ->
         if type is 'attr'
@@ -293,26 +308,26 @@ class Builder extends EventEmitter
             key # this should be a tag
 
     register: (type, checker) ->
-        unless type is 'new' or type is 'end'
-            throw new Error "only type 'new' or 'end' allowed."
+        unless type is 'new' or type is 'end' or type is 'ready'
+            throw new Error "only type 'ready', 'new' or 'end' allowed."
         @checkers[type] ?= []
         @checkers[type].push checker
 
     approve: (type, parent, tag, callback) ->
         checkers = @checkers[type]?.slice?() ? []
+        switch type
+            when 'new'
+                next = (tag) ->
+                    checker = checkers.shift() ? callback
+                    checker(parent, tag, next)
 
-        if type is 'new'
-            next = (tag) ->
-                checker = checkers.shift() ? callback
-                checker(parent, tag, next)
-
-        else if type is 'end'
-            [callback, tag] = [tag, parent] # shift arguments
-            next = (tag) ->
-                checker = checkers.shift() ? callback
-                checker(tag, next)
-        else
-            throw new Error "type '#{type}' not supported."
+            when 'ready', 'end'
+                [callback, tag] = [tag, parent] # shift arguments
+                next = (tag) ->
+                    checker = checkers.shift() ? callback
+                    checker(tag, next)
+            else
+                throw new Error "type '#{type}' not supported."
         # start
         next(tag)
 
