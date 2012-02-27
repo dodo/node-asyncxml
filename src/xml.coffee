@@ -47,6 +47,7 @@ add_tag = (newtag, callback) ->
 
         @pending.push tag if tag.closed is no
         @emit 'add', this, tag
+        @isempty = no
         tag.emit? 'close', tag if tag.closed
         callback?.call(this, tag)
 
