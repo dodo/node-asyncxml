@@ -80,8 +80,8 @@ module.exports =
         results = [
             '<test>'
             'rofl'
-            'lol'
             '<item value="a" a=1 b=2 c=3/>'
+            'lol'
             '</test>'
         ]
         test = xml.tag('test')
