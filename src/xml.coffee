@@ -1,6 +1,6 @@
 { EventEmitter } = require 'events'
-{ deep_merge, prettify, new_attrs, safe } = require './util'
-EVENTS = ['add', 'attr', 'attr:remove', 'text', 'raw', 'show', 'hide', 'remove',
+{ deep_merge, new_attrs, safe } = require './util'
+EVENTS = ['add','attr','attr:remove','data','text','raw','show','hide','remove',
           'replace', 'close']
 
 
@@ -13,10 +13,6 @@ parse_args = (name, attrs, children, opts) ->
     opts ?= {}
     return [name, attrs, children, opts]
 
-flush = ->
-    if @buffer.length
-        @write data for data in @buffer
-        @buffer = []
 
 add_tag = (newtag, callback) ->
     return callback?.call(this) unless newtag?
@@ -25,12 +21,6 @@ add_tag = (newtag, callback) ->
     wire_tag = (_, tag) =>
         tag.builder ?= @builder
         tag.parent  ?= this
-
-        tag.on? 'data', (data) =>
-            if @pending[0] is tag
-                @write data
-            else
-                @buffer.push data
 
         pipe = (event) =>
             tag.on? event, =>
@@ -42,23 +32,14 @@ add_tag = (newtag, callback) ->
                 if tag.pending.length
                     tag.pending[0].once 'end', on_end
                 else
-                    if tag.buffer.length
-                        @buffer = @buffer.concat tag.buffer
-                        tag.buffer = []
                     @pending = @pending.slice(1)
-                    flush.call this
                     if @closed and @pending.length is 0
                         @end()
             else
                 for known, i in @pending
                     if tag is known
                         @pending = @pending.slice(0,i).concat @pending.slice i+1
-                        if @buffer.length
-                            before = @pending[i-1]
-                            before.buffer = before.buffer.concat @buffer
-                            @buffer = []
                         if @closed is 'pending'
-                            flush.call this
                             @end()
                         return
                 throw new Error("this shouldn't happen D:")
@@ -105,7 +86,6 @@ class Tag extends EventEmitter
         @pretty = opts.pretty ? off
         @level = opts.level ? 0
         @builder = opts.builder # inheritence
-        @buffer = [] # after this tag all children emitted data
         @pending = [] # no open child tag
         @parent = @builder
         @closed = false
@@ -158,26 +138,27 @@ class Tag extends EventEmitter
         unless content?
             return @content = @builder?.query 'text', this
         content = safe(content) if opts.escape
-        @write content, deep_merge(opts, escape:off) # dont double escape
         if opts.append
             @content += content
         else
             @content  = content
-        @emit('text', this, @content)
+        @emit('text', this, content)
+        @isempty = no
         this
 
     raw: (html, opts = {}) =>
-        @write html, deep_merge(opts, escape:off) # this is raw html, so no escape
         @emit('raw', this, html)
+        @isempty = no
         this
 
-    write: (content, {escape} = {}) =>
+    write: (content, {escape, append} = {}) =>
         content = safe(content) if escape
-        return true if @hidden # dont emit data when this tag is hidden
-        if @isempty
-            @emit 'data', prettify this, "<#{@name}#{new_attrs @attrs}>"
-            @isempty = no
-        @emit 'data', prettify this, "#{content}" if content
+        @emit 'data', this, "#{content}" if content
+        if append ? yes
+            @content += content
+        else
+            @content  = content
+        @isempty = no
         true
 
     up: (opts = {}) =>
@@ -203,12 +184,9 @@ class Tag extends EventEmitter
                 @closed = 'approving'
                 close_tag = =>
                     if @isempty
-                        data = "<#{@name}#{new_attrs @attrs}/>"
                         @closed = 'self'
                     else
-                        data = "</#{@name}>"
                         @closed = yes
-                    @emit 'data', prettify this, data unless @hidden
                     @emit 'close', this
                     @emit 'end'
                     @writable = false
@@ -258,7 +236,6 @@ class Builder extends EventEmitter
     constructor: (@opts = {}) ->
         # values
         @builder = this
-        @buffer = [] # for child output
         @pending = [] # no open child tag
         @checkers = {} # all the middlewares that have to approve a new tag
         # states
@@ -270,9 +247,6 @@ class Builder extends EventEmitter
         @Tag = Tag
         @tag = new_tag
         @$tag = sync_tag
-
-    write: (data) =>
-        @emit 'data', data
 
     end: () =>
         if @pending.length
