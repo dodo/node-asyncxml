@@ -1,6 +1,6 @@
 { EventEmitter } = require 'events'
 { deep_merge, new_attrs, safe } = require './util'
-EVENTS = ['add','attr','attr:remove','data','text','raw','show','hide','remove',
+EVENTS = ['add', 'attr', 'data', 'text', 'raw', 'show', 'hide', 'remove',
           'replace', 'close']
 
 
@@ -106,25 +106,27 @@ class Tag extends EventEmitter
     attr: (key, value) =>
         if typeof key is 'string'
             if not value? and ((attr = @builder?.query 'attr', this, key))?
-                # sync it and return value
-                @attrs[key] = attr
+                # attr is not defined if attr is undefined
+                # attr doesn't have a value when attr is null
+                unless attr is undefined
+                    # sync it and return value
+                    @attrs[key] = attr
                 return attr
             @attrs[key] = value
             @emit 'attr', this, key, value
         else
             for own k, v of key
-                @attrs[k] = v
+                unless v is undefined
+                    @attrs[k] = v
+                else
+                    delete @attr[key]
                 @emit 'attr', this, k, v
         this
 
-    removeAttr: (key) =>
-        if typeof key is 'string'
+    removeAttr: (keys...) =>
+        for key in keys
             delete @attrs[key]
-            @emit 'attr:remove', this, key
-        else
-            for own k, v of key
-                delete @attr[key]
-                @emit 'attr:remove', this, key
+            @emit 'attr', this, key, undefined
         this
 
     children: (children) =>
