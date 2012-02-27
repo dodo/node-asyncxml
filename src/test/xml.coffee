@@ -152,7 +152,7 @@ module.exports =
         xml = streamify new Builder
         xml.stream.on 'end', æ.done
         xml.stream.once 'data', (tag) ->
-            æ.equal "<test a=1 b=\"b\" c d=\"true\"/>", tag
+            æ.equal "<test a=1 b=\"b\" c d=true/>", tag
         xml.tag('test', a:1, b:'b', c:null, d:true).end()
         xml.end()
 
@@ -244,7 +244,7 @@ module.exports =
             '<apple>'
             '<wurm color="red">'
             '<seed>'
-            '<is dead="true"/>'
+            '<is dead=true/>'
             '</seed>'
             '</wurm>'
             '</apple>'
@@ -273,13 +273,13 @@ module.exports =
         results = [
             '<global>'
             '<test version=3 alt="info" border=0>'
-            '<top center="true"/>'
+            '<top center=true/>'
             '<foo bar="moo" border=0>'
             '<first/>'
             '<bar x=2/>'
             '<center args="true"/>'
             '<last/>'
-            '<xxx ccc="true">'
+            '<xxx ccc=true>'
             '<pok/>'
             '<asd/>'
             '<happy dodo/>'
@@ -299,7 +299,7 @@ module.exports =
 
         foo.tag('first').end()
         bar = foo.tag('bar', x:2)
-        foo.tag('center', args:true).end()
+        foo.tag('center', args:"true").end()
         foo.tag('last').end()
         xxx = foo.tag('xxx', ccc:yes)
 
