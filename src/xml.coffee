@@ -36,13 +36,11 @@ add_tag = (newtag, callback) ->
                     if @closed and @pending.length is 0
                         @end()
             else
-                for known, i in @pending
-                    if tag is known
-                        @pending.splice(i, 1)
-                        if @closed is 'pending'
-                            @end()
-                        return
-                throw new Error("this shouldn't happen D:")
+                if (i = @pending.indexOf(tag)) is -1
+                    throw new Error("this shouldn't happen D:")
+                @pending.splice(i, 1)
+                if @closed is 'pending'
+                    @end()
             return
 
         @pending.push tag if tag.closed is no
