@@ -240,8 +240,11 @@ class Tag extends EventEmitter
         this
 
     ready: (callback) =>
-        return callback?.call(this) if @isready
+        if @isready
+            callback?.call(this)
+            return this
         @once 'ready', callback
+        this
 
 
 class Builder extends EventEmitter
