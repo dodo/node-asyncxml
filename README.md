@@ -275,19 +275,15 @@ Set or Get tag attributes.
 
 When using an adapter getting an attribute results in a value provided by the adapter.
 
+When getting a value the results can be interpreted as follow:
+
+* `undefined` the tag doesn't have this attribute
+* `null` the attributes doesn't have a value
+* everything else is a the value of the attribute
+
 e.g. if you use the [jQuery Adapter](https://github.com/dodo/node-dt-jquery) the resulting value is the return value of [jQuery.attr](http://api.jquery.com/attr/).
 
 Emits an `attr` Event.
-
-
-#### tag.removeAttr(key)
-
-```javascript
-tag.removeAttr("id")
-```
-Remove a specific attribute by key.
-
-Emits an `attr:remove` Event.
 
 
 #### tag.text([content, [opts]])
@@ -378,7 +374,7 @@ Most events travel up the XML tree, some can be only received on their parents.
 ### global
 
 ```javascript
-['add', 'attr', 'attr:remove', 'text', 'raw', 'data', 'show', 'hide', 'remove', 'replace', 'close']
+['add', 'attr', 'text', 'raw', 'data', 'show', 'hide', 'remove', 'replace', 'close']
 ````
 These events can be received from every single tag.
 
