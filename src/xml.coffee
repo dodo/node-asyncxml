@@ -32,13 +32,13 @@ add_tag = (newtag, callback) ->
                 if tag.pending.length
                     tag.pending[0].once 'end', on_end
                 else
-                    @pending = @pending.slice(1)
+                    @pending.shift()
                     if @closed and @pending.length is 0
                         @end()
             else
                 for known, i in @pending
                     if tag is known
-                        @pending = @pending.slice(0,i).concat @pending.slice i+1
+                        @pending.splice(i, 1)
                         if @closed is 'pending'
                             @end()
                         return
