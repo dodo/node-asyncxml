@@ -392,8 +392,8 @@ module.exports =
     'api events': (æ) ->
         xml = new Builder
         xml.on 'end', ->
-            æ.deepEqual copyarr(results.add),   ['add',   "root", "childA", "childB"]
-            æ.deepEqual copyarr(results.close), ['close', "childB", "childA", "root"]
+            æ.deepEqual copyarr(results.add),   ['add',   "root", "childA", "childB", "childC"]
+            æ.deepEqual copyarr(results.close), ['close', "childB", "childC", "root", "childA"]
             æ.done()
 
         results = add:['add'], close:['close']
@@ -406,6 +406,7 @@ module.exports =
         root = xml.tag('root')
         c = root.tag('childA')
         c.tag('childB').end()
+        c.$tag('childC')
         root.end()
         c.end()
         xml.end()
