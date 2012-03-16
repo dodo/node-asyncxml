@@ -240,7 +240,6 @@ class Builder extends EventEmitter
         @checkers = {} # all the middlewares that have to approve a new tag
         # states
         @closed = no
-        @opened_tags = 0
         # defaults
         @opts.pretty ?= off
         @level = @opts.level ? -1
@@ -248,25 +247,17 @@ class Builder extends EventEmitter
         @Tag = Tag
         @tag = new_tag
         @$tag = sync_tag
-        # count opened tags
-        @on 'add',  onadd = (parent, tag) ->
-            @opened_tags++
-            tag.on 'ready', =>
-                @opened_tags--
-                if @closed is 'pending' and @opened_tags is 0
-                    @removeListener('add', onadd)
-                    @closed = yes
-                    @emit 'end'
 
     end: () =>
-        return this if @closed
-        if @opened_tags is 0
-            @closed = yes
-            @emit 'end'
-        else
-            @closed = 'pending'
-            # end event will be emitted when all open tags gets ready
+        @closed = yes
+        @emit 'end'
         this
+#         return this if @closed is yes
+#         if @opened_tags is 0
+#         else
+#             @closed = 'pending'
+            # end event will be emitted when all open tags gets ready
+#         this
 
     ready: (callback) =>
         return callback?() if @closed is yes
