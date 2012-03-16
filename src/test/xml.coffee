@@ -89,6 +89,7 @@ module.exports =
         ]
         test = xml.tag('test')
         test.text("rofl")
+        æ.equal test.toString(), '<test>rofl'
         item = test.tag('item', value:'a', a:1, b:2, c:3)
         test.text("lol")
         item.up().up().end()

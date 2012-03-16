@@ -198,6 +198,8 @@ class Tag extends EventEmitter
                 "/>"
             else if @closed
                 ">#{@content}</#{@name}>" # FIXME children ?
+            else
+                ">#{@content}"
 
     add: (rawtag, callback) =>
         tag = @builder?.query 'tag', this, rawtag
