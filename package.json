@@ -15,7 +15,7 @@
     "muffin": ">= 0.2.6",
     "browserify": "1.6.1",
     "scopify": ">= 0.1.0",
-    "dt-stream": ">= 0.0.1",
+    "dt-stream": ">= 0.1.0",
     "nodeunit": ">= 0.7.4"}
 , "licenses" : [
     { "type": "MIT" ,
