@@ -27,23 +27,6 @@ add_tag = (newtag, callback) ->
                 @emit event, arguments...
         pipe event for event in EVENTS
 
-        tag.once? 'end', on_end = =>
-            if @pending[0] is tag
-                if tag.pending.length
-                    tag.pending[0].once 'end', on_end
-                else
-                    @pending.shift()
-                    if @closed and @pending.length is 0
-                        @end()
-            else
-                if (i = @pending.indexOf(tag)) is -1
-                    throw new Error("this shouldn't happen D:")
-                @pending.splice(i, 1)
-                if @closed is 'pending'
-                    @end()
-            return
-
-        @pending.push tag if tag.closed is no
         @emit 'add', this, tag
         @isempty = no
         tag.emit? 'close', tag if tag.closed
@@ -85,7 +68,6 @@ class Tag extends EventEmitter
         @pretty = opts.pretty ? off
         @level = opts.level ? 0
         @builder = opts.builder # inheritence
-        @pending = [] # no open child tag
         @parent = @builder
         @closed = no
         @writable = true
@@ -179,30 +161,29 @@ class Tag extends EventEmitter
         this
 
     end: () =>
-        if not @closed or @closed is 'pending' or @closed is 'approving'
-            if @pending.length
-                @closed = 'pending'
-            else if @closed isnt 'approving' # don't ask twice
-                @closed = 'approving'
-                close_tag = =>
-                    if @isempty
-                        @closed = 'self'
-                    else
-                        @closed = yes
-                    @emit 'close', this
-                    @emit 'end'
-                    @writable = false
-                    set_ready = =>
-                        @isready = yes
-                        @emit 'ready'
-                    if @builder?
-                        @builder.approve('ready', this, set_ready)
-                    else
-                        set_ready()
-                if @builder?
-                    @builder.approve('end', this, close_tag)
+        if not @closed
+            @closed = 'approving'
+            close_tag = =>
+                if @isempty
+                    @closed = 'self'
                 else
-                    close_tag(this, this)
+                    @closed = yes
+                @emit 'close', this
+                @emit 'end'
+                @writable = false
+                set_ready = =>
+                    @isready = yes
+                    @emit 'ready'
+                if @builder?
+                    @builder.approve('ready', this, set_ready)
+                else
+                    set_ready()
+            if @builder?
+                @builder.approve('end', this, close_tag)
+            else
+                close_tag(this, this)
+        else if @closed is 'approving'
+            # just wait
         else if @closed is 'removed'
             @emit 'end'
             @writable = false
@@ -251,10 +232,10 @@ class Builder extends EventEmitter
     constructor: (@opts = {}) ->
         # values
         @builder = this
-        @pending = [] # no open child tag
         @checkers = {} # all the middlewares that have to approve a new tag
         # states
         @closed = no
+        @opened_tags = 0
         # defaults
         @opts.pretty ?= off
         @level = @opts.level ? -1
@@ -262,14 +243,24 @@ class Builder extends EventEmitter
         @Tag = Tag
         @tag = new_tag
         @$tag = sync_tag
+        # count opened tags
+        @on 'add',  onadd = (parent, tag) ->
+            @opened_tags++
+            tag.on 'ready', =>
+                @opened_tags--
+                if @closed is 'pending' and @opened_tags is 0
+                    @removeListener('add', onadd)
+                    @closed = yes
+                    @emit 'end'
 
     end: () =>
-        if @pending.length
-            @closed = 'pending'
-            @pending[0].once 'end', @end
-        else
-            @emit 'end' if not @closed or @closed is 'pending'
+        return this if @closed
+        if @opened_tags is 0
             @closed = yes
+            @emit 'end'
+        else
+            @closed = 'pending'
+            # end event will be emitted when all open tags gets ready
         this
 
     ready: (callback) =>
