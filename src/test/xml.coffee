@@ -18,6 +18,7 @@ module.exports =
         xml.tag('test').end()
         xml.end()
 
+
     'escape': (æ) ->
         xml = streamify new Builder
         xml.stream.on 'end', æ.done
@@ -56,6 +57,7 @@ module.exports =
             .up()  # items
         .end() # xml
 
+
     attr: (æ) ->
         xml = streamify new Builder
         xml.stream.on 'end', æ.done
@@ -72,6 +74,7 @@ module.exports =
             .attr('value', "b")
         æ.equal item.attr('value'), "b"
         item.up().up().end()
+
 
     toString: (æ) ->
         xml = streamify new Builder
@@ -92,6 +95,7 @@ module.exports =
         æ.equal test.toString(), '<test>lol</test>'
         æ.equal item.toString(), '<item value="a" a=1 b=2 c=3/>'
 
+
     text: (æ) ->
         xml = streamify new Builder
         xml.stream.on 'end', æ.done
@@ -106,6 +110,7 @@ module.exports =
         æ.equal test.text(), "in here"
         test.end()
         xml.end()
+
 
     'sequencial text': (æ) ->
         xml = streamify new Builder
@@ -125,6 +130,7 @@ module.exports =
         æ.equal test.text(), "in here"
         test.end()
         xml.end()
+
 
     'advanced text ordering': (æ) ->
         xml = streamify new Builder
@@ -382,6 +388,7 @@ module.exports =
         counter++
         æ.equal counter, 5
 
+
     'api events': (æ) ->
         xml = new Builder
         xml.on 'end', ->
@@ -402,6 +409,7 @@ module.exports =
         root.end()
         c.end()
         xml.end()
+
 
     'after closed': (æ) ->
         xml = new Builder
@@ -436,9 +444,6 @@ module.exports =
 
             @$tag('last', "content")
             @on('end', done)
-
-
-
 
 
 
