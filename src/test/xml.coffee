@@ -13,16 +13,18 @@ module.exports =
 
     simple: (æ) ->
         xml = streamify new Builder
-        xml.stream.on 'end', æ.done
         xml.stream.once 'data', (tag) -> æ.equal "<test/>", tag
+        xml.stream.on 'end', æ.done
         xml.tag('test').end()
         xml.end()
 
 
     'escape': (æ) ->
         xml = streamify new Builder
-        xml.stream.on 'end', æ.done
         xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
         results = [
             '<test>'
             '&lt;&quot;lind&quot;&amp;wurm&gt;'
@@ -36,8 +38,10 @@ module.exports =
 
     chain: (æ) ->
         xml = streamify new Builder
-        xml.stream.on 'end', æ.done
         xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
         results = [
             '<test>'
             '<items>'
@@ -60,8 +64,10 @@ module.exports =
 
     attr: (æ) ->
         xml = streamify new Builder
-        xml.stream.on 'end', æ.done
         xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
         results = [
             '<test>'
             '<item value="b" a=1 b=2 c=3/>'
@@ -78,8 +84,10 @@ module.exports =
 
     toString: (æ) ->
         xml = streamify new Builder
-        xml.stream.on 'end', æ.done
         xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
         results = [
             '<test>'
             'rofl'
@@ -99,8 +107,10 @@ module.exports =
 
     text: (æ) ->
         xml = streamify new Builder
-        xml.stream.on 'end', æ.done
         xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
         results = [
             '<test>'
             'in here'
@@ -115,8 +125,10 @@ module.exports =
 
     'sequencial text': (æ) ->
         xml = streamify new Builder
-        xml.stream.on 'end', æ.done
         xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
         results = [
             '<test>'
             'in'
@@ -135,8 +147,10 @@ module.exports =
 
     'advanced text ordering': (æ) ->
         xml = streamify new Builder
-        xml.stream.on 'end', æ.done
         xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
         results = [
             '<text>'
             'this is some '
@@ -157,17 +171,19 @@ module.exports =
 
     attributes: (æ) ->
         xml = streamify new Builder
-        xml.stream.on 'end', æ.done
         xml.stream.once 'data', (tag) ->
             æ.equal "<test a=1 b=\"b\" c d=true/>", tag
+        xml.stream.on 'end', æ.done
         xml.tag('test', a:1, b:'b', c:null, d:true).end()
         xml.end()
 
 
     empty: (æ) ->
         xml = streamify new Builder
-        xml.stream.on 'end', æ.done
         xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
         results = [
             '<test/>'
             '<p>'
@@ -187,8 +203,10 @@ module.exports =
 
     'default pretty': (æ) ->
         xml = streamify new Builder pretty:on
-        xml.stream.on 'end', æ.done
         xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
         results = [
             '<apple>\n'
             '  <wurm/>\n'
@@ -202,8 +220,10 @@ module.exports =
 
     'opts pretty': (æ) ->
         xml = streamify new Builder pretty:"→ → →"
-        xml.stream.on 'end', æ.done
         xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
         results = [
             '<product>\n'
             '→ → →<metadata>\n'
@@ -225,8 +245,10 @@ module.exports =
 
     children: (æ) ->
         xml = streamify new Builder
-        xml.stream.on 'end', æ.done
         xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
         results = [
             '<apple>'
             '<wurm color="red">'
@@ -245,8 +267,10 @@ module.exports =
 
     'async children': (æ) ->
         xml = streamify new Builder
-        xml.stream.on 'end', æ.done
         xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
         results = [
             '<apple>'
             '<wurm color="red">'
@@ -275,8 +299,10 @@ module.exports =
 
     complex: (æ) ->
         xml = streamify new Builder
-        xml.stream.on 'end', æ.done
         xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
         results = [
             '<global>'
             '<test version=3 alt="info" border=0>'
@@ -324,8 +350,10 @@ module.exports =
 
     delayed: (æ) ->
         xml = streamify new Builder
-        xml.stream.on 'end', æ.done
         xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
         results = [
             '<grass>'
             '<dog/>'
@@ -349,8 +377,10 @@ module.exports =
 
     pipe: (æ) ->
         xml = streamify new Builder
-        xml.stream.on 'end', æ.done
         xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
         results = [
             '<file>'
             'hello world\n'
@@ -364,8 +394,10 @@ module.exports =
 
     'sync call order': (æ) ->
         xml = streamify new Builder
-        xml.stream.on 'end', æ.done
         xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
         results = [
             '<apple>'
             '<wurm>'

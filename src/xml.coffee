@@ -3,6 +3,9 @@
 EVENTS = ['add', 'attr', 'data', 'text', 'raw', 'show', 'hide', 'remove',
           'replace', 'close']
 
+# could be boosted up by using a c lib → https://github.com/wezm/node-genx
+# TODO add clone method to tag so tags can be cloned (param: deep for deep copy)
+# TODO partials?
 
 parse_args = (name, attrs, children, opts) ->
     unless typeof attrs is 'object'
