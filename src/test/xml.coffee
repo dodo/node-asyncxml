@@ -339,11 +339,12 @@ module.exports =
         setTimeout ( ->
             grass.tag('cat').end()
             dog.end()
-        ), 4
+        ), 3
         setTimeout ( ->
-            grass.end()
             xml.end()
-        ),3
+            grass.end()
+        ),4
+
 
     pipe: (æ) ->
         xml = streamify new Builder
