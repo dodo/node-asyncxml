@@ -481,4 +481,25 @@ module.exports =
             @on('end', done)
 
 
+    inception: (æ) ->
+        xml = new Builder
+        xml.on 'end', ->
+            æ.deepEqual copyarr(results.add),   ['add',   "root", "childA", "childB", "childC"]
+            æ.deepEqual copyarr(results.close), ['close', "root", "childA", "childC", "childB"]
+            æ.done()
+
+        results = add:['add'], close:['close']
+
+        xml.on 'add', (par, el) ->
+            results.add.push el.name
+        xml.on 'close', (el) ->
+            results.close.push el.name
+
+        sub = new Builder
+        root = xml.tag('root').add(sub).end()
+        sub.$tag('childA')
+        sub.tag('childB').tag('childC').up().end()
+        sub.end()
+        xml.end()
+
 
