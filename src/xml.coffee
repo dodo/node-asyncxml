@@ -30,7 +30,9 @@ add_tag = (newtag, callback) ->
                 @emit event, arguments...
         pipe event for event in EVENTS
 
-        @emit 'add', this, tag
+        unless tag is tag.builder # dont anounce builder # FIXME is this a good idea?
+            @emit 'add', this, tag
+            @emit 'new', tag
         @isempty = no
         tag.emit? 'close', tag if tag.closed
         callback?.call(this, tag)
@@ -52,7 +54,6 @@ new_tag = ->
     newtag = new TagInstance name, attrs, null, opts
     newtag.parent = this
     add_tag.call this, newtag, (tag) ->
-        @emit 'new', tag
         tag.children children, opts if children?
     return newtag # hopefully this is still the same after the approval
 
