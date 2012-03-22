@@ -253,12 +253,6 @@ class Builder extends EventEmitter
         @closed = yes
         @emit 'end'
         this
-#         return this if @closed is yes
-#         if @opened_tags is 0
-#         else
-#             @closed = 'pending'
-            # end event will be emitted when all open tags gets ready
-#         this
 
     ready: (callback) =>
         return callback?() if @closed is yes
