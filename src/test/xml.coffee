@@ -433,9 +433,9 @@ module.exports =
         results = add:['add'], close:['close']
 
         xml.on 'add', (par, el) ->
-            results.add.push el.name
+            results.add.push   el.name unless el is el.builder
         xml.on 'close', (el) ->
-            results.close.push el.name
+            results.close.push el.name unless el is el.builder
 
         root = xml.tag('root')
         c = root.tag('childA')
@@ -462,12 +462,10 @@ module.exports =
 
             æ.done()
 
-        xml.on 'add',   (par, tag) -> results.add.push tag.name
-        xml.on 'close', (tag) ->
-            results.close.push tag.name
-            #{name, closed, level} = tag
-            #console.log 'close',{name, closed, level, parent:tag.parent.name, builder:tag.builder.closed}
-            console.log 'close', tag.name
+        xml.on 'add', (par, el) ->
+            results.add.push   el.name unless el is el.builder
+        xml.on 'close', (el) ->
+            results.close.push el.name unless el is el.builder
 
         first = xml.tag('first')
         first.end()
@@ -491,9 +489,9 @@ module.exports =
         results = add:['add'], close:['close']
 
         xml.on 'add', (par, el) ->
-            results.add.push el.name
+            results.add.push   el.name unless el is el.builder
         xml.on 'close', (el) ->
-            results.close.push el.name
+            results.close.push el.name unless el is el.builder
 
         sub = new Builder
         root = xml.tag('root').add(sub).end()
