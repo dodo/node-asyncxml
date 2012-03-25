@@ -30,9 +30,8 @@ add_tag = (newtag, callback) ->
                 @emit event, arguments...
         pipe event for event in EVENTS
 
-        unless tag is tag.builder # dont anounce builder # FIXME is this a good idea?
-            @emit 'add', this, tag
-            @emit 'new', tag
+        @emit 'add', this, tag
+        @emit 'new', tag
         @isempty = no
         tag.emit? 'close', tag if tag.closed
         callback?.call(this, tag)
@@ -251,6 +250,7 @@ class Builder extends EventEmitter
 
     end: () =>
         @closed = yes
+        @emit 'close', this # tag api
         @emit 'end'
         this
 
