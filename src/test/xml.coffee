@@ -501,3 +501,38 @@ module.exports =
         xml.end()
 
 
+    'builder::add': (æ) ->
+        xml = new Builder
+        xml.on 'end', ->
+            æ.deepEqual copyarr(results.add),   ['add',   "root", "childA"]
+            æ.deepEqual copyarr(results.close), ['close', "root", "childA"]
+            æ.done()
+
+        results = add:['add'], close:['close']
+
+        xml.on 'add', (par, el) ->
+            results.add.push   el.name unless el is el.builder
+        xml.on 'close', (el) ->
+            results.close.push el.name unless el is el.builder
+
+        xml.tag('root').end()
+        xml.add new Tag "childA", -> @end()
+        xml.end()
+
+
+    'streamified builder::add': (æ) ->
+        xml = streamify new Builder
+        xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
+        results = [
+            '<root/>'
+            '<childA/>'
+        ]
+
+        xml.tag('root').end()
+        xml.add new Tag "childA", -> @end()
+        xml.end()
+
+
