@@ -207,9 +207,6 @@ class Tag extends EventEmitter
     add: (rawtag, callback) =>
         tag = @builder?.query 'tag', this, rawtag
         tag = rawtag unless tag? or @builder?
-        unless tag?
-            callback?.call(this)
-            return this
         # TODO query result validation
         add_tag.call(this, tag, callback)
         this
@@ -247,6 +244,13 @@ class Builder extends EventEmitter
         @Tag = Tag
         @tag = new_tag
         @$tag = sync_tag
+
+    add: (rawtag, callback) =>
+        tag = @query 'tag', this, rawtag
+        tag = rawtag unless tag?
+        # TODO query result validation
+        add_tag.call(this, tag, callback)
+        this
 
     end: () =>
         @closed = yes
