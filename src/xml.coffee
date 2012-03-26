@@ -25,10 +25,20 @@ add_tag = (newtag, callback) ->
         tag.builder ?= @builder
         tag.parent  ?= this
 
+        listeners = {}
         pipe = (event) =>
-            tag.on? event, =>
+            tag.on? event, listeners[event] = =>
                 @emit event, arguments...
+        dispose = (el) =>
+            return unless el is this or el is tag
+            @removeListener('remove', dispose)
+            tag.removeListener?('remove', dispose)
+            for event in EVENTS
+                tag.removeListener?(event, listeners[event])
+            delete listeners
         pipe event for event in EVENTS
+        tag.once?('remove', dispose)
+        @once('remove', dispose)
 
         @emit 'add', this, tag
         @emit 'new', tag
@@ -220,6 +230,7 @@ class Tag extends EventEmitter
     remove: () =>
         @closed = 'removed' unless @closed
         @emit 'remove', this
+        @removeAllListeners()
         this
 
     ready: (callback) =>
