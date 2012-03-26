@@ -25,20 +25,31 @@ add_tag = (newtag, callback) ->
         tag.builder ?= @builder
         tag.parent  ?= this
 
+        self = this
         listeners = {}
-        pipe = (event) =>
-            tag.on? event, listeners[event] = =>
-                @emit event, arguments...
-        dispose = (el) =>
-            return unless el is this or el is tag
-            @removeListener('remove', dispose)
+        pipe = (event) ->
+            tag.on? event, listeners[event] = ->
+                self.emit event, arguments...
+        dispose = (el) ->
+            return unless el is self or el is tag
+            self.removeListener('repipe', repipe)
+            self.removeListener('remove', dispose)
             tag.removeListener?('remove', dispose)
             for event in EVENTS
-                tag.removeListener?(event, listeners[event])
-            delete listeners
-        pipe event for event in EVENTS
-        tag.once?('remove', dispose)
-        @once('remove', dispose)
+                if (listener = listeners[event])?
+                    tag.removeListener?(event, listener)
+            listeners = {}
+        wire = ->
+            pipe event for event in EVENTS
+            tag.once?('remove', dispose)
+            self.once('remove', dispose)
+            self.once('repipe', repipe)
+        repipe = (replacement) ->
+            dispose(self)
+            self = replacement
+            wire()
+        # enough preparation, lets do it:
+        wire()
 
         @emit 'add', this, tag
         @emit 'new', tag
@@ -221,10 +232,17 @@ class Tag extends EventEmitter
         add_tag.call(this, tag, callback)
         this
 
-    replace: (tag) =>
-        # FIXME should happen smthing smart?
-        # should both instances become one? when yes, how?
+    replace: (rawtag) =>
+        tag = @builder?.query 'tag', this, rawtag
+        tag = rawtag unless tag? or @builder?
+        # repipe all events to the new tag
+        for events in Object.keys(@_events ? {}).map((e) => [e,@listeners(e)])
+            for [event, listeners] in events
+                for listener in listeners ? []
+                    tag.on(event, listener) if typeof listener is 'function'
+        @emit 'repipe', tag
         @emit 'replace', this, tag
+        @removeAllListeners()
         this
 
     remove: () =>
