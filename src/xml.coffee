@@ -236,10 +236,11 @@ class Tag extends EventEmitter
         tag = @builder?.query 'tag', this, rawtag
         tag = rawtag unless tag? or @builder?
         # repipe all events to the new tag
-        for events in Object.keys(@_events ? {}).map((e) => [e,@listeners(e)])
-            for [event, listeners] in events
-                for listener in listeners ? []
-                    tag.on(event, listener) if typeof listener is 'function'
+        events = Object.keys(@_events ? {}).map((e) => [e,@listeners(e)])
+        for [event, listeners] in events
+            continue if event is 'newListener' or event is 'maxListeners'
+            for listener in listeners ? []
+                tag.on(event, listener) if typeof listener is 'function'
         @emit 'repipe', tag
         @emit 'replace', this, tag
         @removeAllListeners()
