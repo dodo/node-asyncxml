@@ -275,6 +275,9 @@ class Builder extends EventEmitter
         @tag = new_tag
         @$tag = sync_tag
 
+    toString: ->
+        "[object AsyncXMLBuilder]"
+
     add: (rawtag, callback) =>
         tag = @query 'tag', this, rawtag
         tag = rawtag unless tag?
