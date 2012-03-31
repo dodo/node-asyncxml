@@ -17,6 +17,43 @@ parse_args = (name, attrs, children, opts) ->
     return [name, attrs, children, opts]
 
 
+connect_tags = (parent, child) ->
+    listeners = {}
+    pipe = (event) ->
+        child.on? event, listeners[event] = ->
+            parent.emit(event, arguments...)
+    wire = ->
+        pipe event for event in EVENTS
+    dispose = ->
+        for event in EVENTS
+            if (listener = listeners[event])?
+                child.removeListener?(event, listener)
+                listeners[event] = undefined
+    remove = ->
+        dispose()
+        if this is child
+            parent.removeListener('removed', remove)
+        else
+            child.removeListener('removed', remove)
+        parent.removeListener('replaced', replace)
+        child.removeListener('replaced', replace)
+    replace = (tag) ->
+        if this is child
+            remove.call(parent)
+            child = tag
+            wire()
+        else
+            parent.removeListener('removed', remove)
+            parent = tag
+        tag.once('replaced', replace)
+        tag.once('removed', remove)
+    wire() # add
+    child.once('removed', remove)
+    parent.once('removed', remove)
+    child.once('replaced', replace)
+    parent.once('replaced', replace)
+
+
 add_tag = (newtag, callback) ->
     return callback?.call(this) unless newtag?
     # only when the builder approves the new tag we can proceed with announcing
@@ -25,31 +62,7 @@ add_tag = (newtag, callback) ->
         tag.builder ?= @builder
         tag.parent  ?= this
 
-        self = this
-        listeners = {}
-        pipe = (event) ->
-            tag.on? event, listeners[event] = ->
-                self.emit event, arguments...
-        dispose = (el) ->
-            return unless el is self or el is tag
-            self.removeListener('repipe', repipe)
-            self.removeListener('remove', dispose)
-            tag.removeListener?('remove', dispose)
-            for event in EVENTS
-                if (listener = listeners[event])?
-                    tag.removeListener?(event, listener)
-            listeners = {}
-        wire = ->
-            pipe event for event in EVENTS
-            tag.once?('remove', dispose)
-            self.once('remove', dispose)
-            self.once('repipe', repipe)
-        repipe = (replacement) ->
-            dispose(self)
-            self = replacement
-            wire()
-        # enough preparation, lets do it:
-        wire()
+        connect_tags(this, tag)
 
         @emit 'add', this, tag
         @emit 'new', tag
@@ -235,20 +248,20 @@ class Tag extends EventEmitter
     replace: (rawtag) =>
         tag = @builder?.query 'tag', this, rawtag
         tag = rawtag unless tag? or @builder?
-        # repipe all events to the new tag
-        events = Object.keys(@_events ? {}).map((e) => [e,@listeners(e)])
-        for [event, listeners] in events
-            continue if event is 'newListener' or event is 'maxListeners'
-            for listener in listeners ? []
-                tag.on(event, listener) if typeof listener is 'function'
-        @emit 'repipe', tag
+        return this if this is tag
         @emit 'replace', this, tag
-        @removeAllListeners()
-        this
+        tag.parent  ?= @parent
+        tag.builder ?= @builder
+        if @builder is tag.builder
+            @builder = null
+        @parent = null
+        @emit 'replaced', tag # internal
+        tag
 
     remove: () =>
         @closed = 'removed' unless @closed
         @emit 'remove', this
+        @emit 'removed' # internal
         @removeAllListeners()
         this
 
