@@ -536,3 +536,39 @@ module.exports =
         xml.end()
 
 
+    'Tag::replace': (æ) ->
+        xml = new Builder
+        xml.on 'end', ->
+            æ.equal "replaced", (old_replaced and "replaced" or "no replace")
+            æ.equal "replaced", (replaced is 1 and "replaced" or "0 replaces")
+            æ.equal "no own event", (own_event and "own event" or "no own event")
+            æ.equal "no new tag", (new_tag and "new tag" or "no new tag")
+            æ.equal "closed old tag", (closed_old and "closed old tag" or "old tag is open")
+            æ.equal "closed new tag", (closed_new and "closed new tag" or "new tag is open")
+            æ.equal 1, children
+            æ.done()
+        replaced = 0
+        old_replaced = no
+        own_event = no
+        new_tag = no
+        closed_old = no
+        closed_new = yes
+        children = 0
+
+        old = xml.tag "old"
+        xml.on 'replace', -> replaced++
+        old.on 'replace', -> old_replaced = yes
+        old.on 'own event', -> own_event = yes
+        old.on 'end', -> closed_old = yes
+        old.on 'add', -> new_tag = yes
+        xml.on 'add', -> children++
+
+        tag = new Tag "new"
+        tag.on 'end', -> closed_new = yes
+        old.replace tag
+        tag.emit 'own event'
+        tag.$tag("test")
+
+        old.end()
+        tag.end()
+        xml.end()
