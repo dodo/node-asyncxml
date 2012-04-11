@@ -116,7 +116,8 @@ class Tag extends EventEmitter
         @$tag = sync_tag
         @tag = new_tag
 
-    emit: =>
+    emit: (event) =>
+        return super if event is 'ready'
         if @builder?.closed is yes and @parent?.closed is yes
             @builder.emit arguments...
         else super
