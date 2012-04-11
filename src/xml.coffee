@@ -250,9 +250,9 @@ class Tag extends EventEmitter
         tag = @builder?.query 'tag', this, rawtag
         tag = rawtag unless tag? or @builder?
         return this if this is tag
-        @emit 'replace', this, tag
         tag.parent  ?= @parent
         tag.builder ?= @builder
+        @emit 'replace', this, tag
         if @builder is tag.builder
             @builder = null
         @parent = null
