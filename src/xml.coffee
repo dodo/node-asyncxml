@@ -105,6 +105,7 @@ class Tag extends EventEmitter
         @pretty = opts.pretty ? off
         @level = opts.level ? 0
         @builder = opts.builder # inheritence
+        @setMaxListeners(0)
         @parent = @builder
         @closed = no
         @writable = true
@@ -278,6 +279,7 @@ class Builder extends EventEmitter
         # defaults
         @opts.pretty ?= off
         @level = @opts.level ? -1
+        @setMaxListeners(0)
         # api
         @Tag = Tag
         @tag = new_tag
