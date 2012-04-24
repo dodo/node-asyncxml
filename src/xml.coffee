@@ -302,7 +302,7 @@ class Builder extends EventEmitter
         this
 
     ready: (callback) =>
-        return callback?() if @closed is yes
+        return callback?.call(this) if @closed is yes
         @once 'end', callback
 
     # intern getter to let intern tag structure stay in sync with eg dom
