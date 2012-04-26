@@ -285,6 +285,9 @@ class Builder extends EventEmitter
         @tag = new_tag
         @$tag = sync_tag
 
+    show: Tag::show
+    hide: Tag::hide
+
     toString: ->
         "[object AsyncXMLBuilder]"
 
