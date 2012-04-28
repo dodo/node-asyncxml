@@ -260,7 +260,7 @@ class Tag extends EventEmitter
     remove: (opts = {}) =>
         @closed = 'removed' unless @closed or opts.soft
         @emit 'remove', this, opts
-        @builder = null
+        @builder = null unless this is @builder
         @parent = null
         @emit 'removed', opts.soft # internal
         @removeAllListeners() unless opts.soft
@@ -292,6 +292,7 @@ class Builder extends EventEmitter
 
     show: Tag::show
     hide: Tag::hide
+    remove: Tag::remove
 
     toString: ->
         "[object AsyncXMLBuilder]"
