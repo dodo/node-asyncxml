@@ -29,14 +29,17 @@ connect_tags = (parent, child) ->
             if (listener = listeners[event])?
                 child.removeListener?(event, listener)
                 listeners[event] = undefined
-    remove = ->
-        dispose()
+    remove = (soft) ->
         if this is child
             parent.removeListener('removed', remove)
-        else
+            dispose()
+            parent.removeListener('replaced', replace)
+            child.removeListener('replaced', replace)
+        else unless soft
             child.removeListener('removed', remove)
-        parent.removeListener('replaced', replace)
-        child.removeListener('replaced', replace)
+            dispose()
+            parent.removeListener('replaced', replace)
+            child.removeListener('replaced', replace)
     replace = (tag) ->
         if this is child
             remove.call(parent)
@@ -70,6 +73,7 @@ add_tag = (newtag, callback) ->
         tag.emit? 'close', tag if tag.closed
         callback?.call(this, tag)
 
+    newtag.parent = this
     if @builder?
         @builder.approve('new', this, newtag, wire_tag)
     else
@@ -85,7 +89,6 @@ new_tag = ->
 
     TagInstance = @builder?.Tag ? Tag
     newtag = new TagInstance name, attrs, null, opts
-    newtag.parent = this
     add_tag.call this, newtag, (tag) ->
         tag.children children, opts if children?
     return newtag # hopefully this is still the same after the approval
@@ -230,7 +233,7 @@ class Tag extends EventEmitter
             if @closed is 'self'
                 "/>"
             else if @closed
-                ">#{@content}</#{@name}>" # FIXME children ?
+                ">#{@content}</#{@name}>"
             else
                 ">#{@content}"
 
@@ -254,11 +257,13 @@ class Tag extends EventEmitter
         @emit 'replaced', tag # internal
         tag
 
-    remove: () =>
-        @closed = 'removed' unless @closed
-        @emit 'remove', this
-        @emit 'removed' # internal
-        @removeAllListeners()
+    remove: (opts = {}) =>
+        @closed = 'removed' unless @closed or opts.soft
+        @emit 'remove', this, opts
+        @builder = null
+        @parent = null
+        @emit 'removed', opts.soft # internal
+        @removeAllListeners() unless opts.soft
         this
 
     ready: (callback) =>
