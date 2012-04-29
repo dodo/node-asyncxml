@@ -20,6 +20,7 @@ parse_args = (name, attrs, children, opts) ->
 connect_tags = (parent, child) ->
     listeners = {}
     pipe = (event) ->
+        return if listeners[event]?
         child.on? event, listeners[event] = ->
             parent.emit(event, arguments...)
     wire = ->
@@ -32,14 +33,16 @@ connect_tags = (parent, child) ->
     remove = (soft) ->
         if this is child
             parent.removeListener('removed', remove)
-            dispose()
             parent.removeListener('replaced', replace)
             child.removeListener('replaced', replace)
-        else unless soft
+            dispose()
+        else if soft
+            parent.once('removed', remove)
+        else
             child.removeListener('removed', remove)
-            dispose()
             parent.removeListener('replaced', replace)
             child.removeListener('replaced', replace)
+            dispose()
     replace = (tag) ->
         if this is child
             remove.call(parent)
