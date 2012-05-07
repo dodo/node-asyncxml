@@ -67,6 +67,8 @@ add_tag = (newtag, callback) ->
     wire_tag = (_, tag) =>
         tag.builder ?= @builder
         tag.parent  ?= this
+        tag.builder.opts.pretty = @builder.opts.pretty
+        tag.builder.level = @level
 
         connect_tags(this, tag)
 
