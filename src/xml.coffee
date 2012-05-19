@@ -286,6 +286,7 @@ class Builder extends EventEmitter
         @checkers = {} # all the middlewares that have to approve a new tag
         # states
         @closed = no
+        @isempty = yes
         # defaults
         @opts.pretty ?= off
         @level = @opts.level ? -1
