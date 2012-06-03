@@ -79,6 +79,7 @@ module.exports =
         item.attr(a:1, b:2, c:3)
             .attr('value', "b")
         æ.equal item.attr('value'), "b"
+        æ.equal item.attr('non-existant'), undefined
         item.up().up().end()
 
 

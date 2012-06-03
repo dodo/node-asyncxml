@@ -127,7 +127,8 @@ class Tag extends EventEmitter
 
     attr: (key, value) =>
         if typeof key is 'string'
-            if not value? and ((attr = @builder?.query 'attr', this, key))?
+            if not value?
+                attr = @builder?.query('attr', this, key)
                 # attr is not defined if attr is undefined
                 # attr doesn't have a value when attr is null
                 unless attr is undefined
