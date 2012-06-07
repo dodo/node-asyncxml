@@ -87,9 +87,7 @@ add_tag = (newtag, callback) ->
 new_tag = ->
     [name, attrs, children, opts] = parse_args arguments...
     opts.level ?= @level+1
-
-    # possibility to overwrite existing opts, like pretty
-    opts = deep_merge (@builder?.opts ? {}), opts
+    opts.pretty ?= @builder?.opts.pretty
     opts.builder = @builder
 
     TagInstance = @builder?.Tag ? Tag

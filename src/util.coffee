@@ -1,18 +1,6 @@
 { isArray } = Array
 
 
-deep_merge = (objs...) ->
-    objs = objs[0] if isArray(objs[0])
-    res = {}
-    for obj in objs
-        for k, v of obj
-            if typeof(v) is 'object' and not isArray(v)
-                res[k] = deep_merge(res[k] or {}, v)
-            else
-                res[k] = v
-    res
-
-
 indent = ({level, pretty}) ->
     return "" if not pretty or level is 0
     pretty = "  " if pretty is on
@@ -52,4 +40,4 @@ safe = (text) ->
         .replace(/"/g, '&quot;')
 
 
-module.exports = { deep_merge, prettify, indent, new_attrs, safe }
+module.exports = { prettify, indent, new_attrs, safe }
