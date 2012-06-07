@@ -1,5 +1,5 @@
 { EventEmitter } = require 'events'
-{ deep_merge, new_attrs, safe } = require './util'
+{ new_attrs, safe } = require './util'
 EVENTS = ['add', 'attr', 'data', 'text', 'raw', 'show', 'hide', 'remove',
           'replace', 'close']
 
