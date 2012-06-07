@@ -280,6 +280,10 @@ class Tag extends EventEmitter
 
 class Builder extends EventEmitter
     constructor: (@opts = {}) ->
+        # methods
+        @show = @show.bind(this)
+        @hide = @hide.bind(this)
+        @remove = @remove.bind(this)
         # values
         @builder = this
         @checkers = {} # all the middlewares that have to approve a new tag
