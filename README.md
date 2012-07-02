@@ -86,13 +86,38 @@ tag.$tag("xml", {version:"1.0"}, function() { … })
 Same as `Tag::$tag`.
 
 
-#### xml.write(data)
+#### xml.show()
 
 ```javascript
-fs = require('fs')
-fs.createReadStream(filename).pipe(xml)
+xml.show()
 ```
-Same as `Tag::write`.
+Same as `Tag::show`.
+
+
+#### xml.hide()
+
+```javascript
+xml.hide()
+```
+Same as `Tag::hide`.
+
+
+#### xml.remove([opts])
+
+```javascript
+xml.remove({soft:true})
+```
+Same as `Tag::remove`.
+
+
+#### xml.ready(callback)
+
+```javascript
+xml.ready(function () {
+  console.log("builder is done.")
+})
+```
+Instead of `Tag::ready` it waits for the `end` event,
 
 
 #### xml.end()
@@ -163,7 +188,11 @@ Normally you don't need to instantiate this, because you should use `Tag::tag` a
 #### tag.tag(name, [attrs, [children, [opts]]])
 
 ```javascript
-tag.tag("name", {attrs:null}, function() { … })
+tag.tag("name", {attrs:null}, function () { … })
+// these work as well:
+tag.tag("name", {attrs:null}, "content")
+tag.tag("name", function () {…})
+tag.tag("name", "content")
 ```
 Same api as `Tag`.
 __info__ tag is not closed.
@@ -294,6 +323,10 @@ tag.text("content") // set text
 ```
 Set or Get tag text content.
 
+Options:
+* `escape`
+* `append`
+
 Emits a `text` and `data` Event.
 
 When using an adapter getting text results in the content provided by the adapter.
@@ -322,6 +355,9 @@ Write tag data.
 
 Useful to pipe file content into a tag (as text).
 (dunno what happens if you pipe binary through)
+
+Options:
+* `escape`
 
 Emits a `data` Event.
 
@@ -397,6 +433,15 @@ When you listen for `end` on a *specific tag* you get the 'end' event only from 
 
 When you listen for `end` on a *builder instance* you get the 'end' event when the last tag is closed.
 
+
+## partials
+
+It's recursive! just add a builder instance to a tag:
+```javascript
+xml = new Builder
+sub = new Builder
+root = xml.tag('root').add(sub).end()
+```
 
 
 
