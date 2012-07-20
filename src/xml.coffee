@@ -30,7 +30,7 @@ connect_tags = (parent, child) ->
             if (listener = listeners[event])?
                 child.removeListener?(event, listener)
                 listeners[event] = undefined
-    remove = (soft) ->
+    remove = (soft, noremove) ->
         if this is child
             parent.removeListener('removed', remove)
             parent.removeListener('replaced', replace)
@@ -43,9 +43,10 @@ connect_tags = (parent, child) ->
             parent.removeListener('replaced', replace)
             child.removeListener('replaced', replace)
             dispose()
+            child.remove() unless noremove
     replace = (tag) ->
         if this is child
-            remove.call(parent)
+            remove.call(parent, no, yes)
             child = tag
             wire()
         else
