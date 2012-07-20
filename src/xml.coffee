@@ -302,6 +302,7 @@ class Builder extends EventEmitter
     show: Tag::show
     hide: Tag::hide
     remove: Tag::remove
+    replace: Tag::replace
 
     toString: ->
         "[object AsyncXMLBuilder]"
