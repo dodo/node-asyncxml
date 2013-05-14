@@ -210,7 +210,6 @@ class Tag extends EventEmitter
                 else
                     @closed = yes
                 @emit 'close', this
-                @emit 'end'
                 @writable = false
                 set_ready = =>
                     @isready = yes
@@ -219,6 +218,7 @@ class Tag extends EventEmitter
                     @builder.approve('ready', this, set_ready)
                 else
                     set_ready()
+                @emit 'end'
             if @builder?
                 @builder.approve('end', this, close_tag)
             else
