@@ -263,7 +263,7 @@ class Tag extends EventEmitter
         tag
 
     remove: (opts = {}) =>
-        @closed = 'removed' unless @closed or opts.soft
+        @closed = 'removed' unless opts.soft
         @emit 'remove', this, opts
         @builder = null unless this is @builder
         @parent = null
