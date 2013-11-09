@@ -77,6 +77,7 @@ add_tag = (newtag, callback) ->
         @emit 'new', tag
         @isempty = no
         tag.emit? 'close', tag if tag.closed
+        tag.emit? 'added', this
         callback?.call(this, tag)
 
     newtag.parent = this
@@ -153,7 +154,10 @@ class Tag extends EventEmitter
 
     children: (children) =>
         return this unless children?
-        if typeof children is 'function'
+        unless @parent
+            @once 'added', ->
+                @children children
+        else if typeof children is 'function'
             children.call this
         else
             @text children
