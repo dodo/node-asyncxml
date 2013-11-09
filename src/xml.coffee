@@ -117,9 +117,10 @@ class Tag extends EventEmitter
         @parent = @builder
         @closed = no
         @writable = true
-        @hidden = no
+        @hidden =  no
         @isready = no
         @isempty = yes
+        @isselfclosing = no
         @content = ""
         @children children, opts
         @$tag = sync_tag
@@ -208,12 +209,12 @@ class Tag extends EventEmitter
 
     end: () =>
         if not @closed
+            if @isempty
+                @isempty = no
+                @isselfclosing = yes
             @closed = 'approving'
             close_tag = =>
-                if @isempty
-                    @closed = 'self'
-                else
-                    @closed = yes
+                @closed = yes
                 @emit 'close', this
                 @writable = false
                 set_ready = =>
@@ -240,7 +241,7 @@ class Tag extends EventEmitter
 
     toString: () =>
         "<#{@name}#{new_attrs @attrs}" +
-            if @closed is 'self'
+            if @isempty
                 "/>"
             else if @closed
                 ">#{@content}</#{@name}>"
