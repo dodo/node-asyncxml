@@ -305,6 +305,7 @@ class Builder extends EventEmitter
         # states
         @closed = no
         @isempty = yes
+        @writable = true
         # defaults
         @opts.pretty ?= off
         @level = @opts.level ? -1
@@ -334,6 +335,7 @@ class Builder extends EventEmitter
 
     end: () =>
         @closed = yes
+        @writable = no
         @emit 'close', this # tag api
         @emit 'end'
         this
