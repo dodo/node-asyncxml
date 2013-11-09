@@ -45,12 +45,26 @@ module.exports =
         results = [
             '<test>'
             '<items>'
+
+
+    'self closing': (æ) ->
+        xml = streamify new Builder
+        xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
+        results = [
+            '<test>'
+            '<items>'
             '<item value="a"/>'
             '<item value="b"/>'
             '<item value="c"/>'
             '</items>'
             '</test>'
         ]
+        xml.register 'end', (tag, next) ->
+            tag.isempty = yes if tag.isselfclosing
+            next(tag)
         xml
             .tag('test')
                 .tag('items')
