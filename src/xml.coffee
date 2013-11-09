@@ -188,8 +188,9 @@ class Tag extends EventEmitter
 
     up: (opts = {}) =>
         opts.end ?= true
+        parent = @parent # might get removed
         @end arguments... if opts.end
-        @parent
+        parent
 
     show: () =>
         @hidden = no
