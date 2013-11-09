@@ -298,6 +298,7 @@ class Builder extends EventEmitter
         @show = @show.bind(this)
         @hide = @hide.bind(this)
         @remove = @remove.bind(this)
+        @replace = @replace.bind(this)
         # values
         @builder = this
         @checkers = {} # all the middlewares that have to approve a new tag
