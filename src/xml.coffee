@@ -93,14 +93,14 @@ new_tag = ->
 
     TagInstance = @builder?.Tag ? Tag
     newtag = new TagInstance name, attrs, null, opts
-    add_tag.call this, newtag, (tag) ->
-        tag.children children, opts if children?
+    callback = ((tag) -> tag.children children, opts) if children?
+    add_tag.call this, newtag, callback
     return newtag # hopefully this is still the same after the approval
 
 sync_tag = ->
     [name, attrs, children, opts] = parse_args arguments...
     self_ending_children_scope = ->
-        @children children
+        @children children if children?
         @end()
     new_tag.call this, name, attrs, self_ending_children_scope, opts
 
