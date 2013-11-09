@@ -9,7 +9,7 @@ EVENTS = ['add', 'attr', 'data', 'text', 'raw', 'show', 'hide', 'remove',
 
 parse_args = (name, attrs, children, opts) ->
     unless typeof attrs is 'object'
-        [opts, children, attrs] = [children, attrs, {}]
+        [attrs, children, opts] = [{}, attrs, children]
     else
         # if attrs is an object and you want to use opts, make children null
         attrs ?= {}
@@ -349,7 +349,7 @@ class Builder extends EventEmitter
                     checker(parent, tag, next)
 
             when 'ready', 'end'
-                [callback, tag] = [tag, parent] # shift arguments
+                [tag, callback] = [parent, tag] # shift arguments
                 next = (tag) ->
                     checker = checkers.shift() ? callback
                     checker(tag, next)
