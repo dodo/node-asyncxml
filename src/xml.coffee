@@ -284,6 +284,14 @@ class Tag extends EventEmitter
         this
 
 
+default_query = (type, tag, key) ->
+    if type is 'attr'
+        tag.attrs[key]
+    else if type is 'text'
+        tag.content
+    else if type is 'tag'
+        key # this should be a tag
+
 class Builder extends EventEmitter
     constructor: (@opts = {}) ->
         # methods
@@ -309,6 +317,9 @@ class Builder extends EventEmitter
     hide: Tag::hide
     remove: Tag::remove
     replace: Tag::replace
+    # intern getter to let intern tag structure stay in sync with eg dom
+    # can be overwritten
+    query: default_query
 
     toString: ->
         "[object AsyncXMLBuilder]"
@@ -330,14 +341,11 @@ class Builder extends EventEmitter
         return callback?.call(this) if @closed is yes
         @once 'end', callback
 
-    # intern getter to let intern tag structure stay in sync with eg dom
-    query: (type, tag, key) ->
-        if type is 'attr'
-            tag.attrs[key]
-        else if type is 'text'
-            tag.content
-        else if type is 'tag'
-            key # this should be a tag
+    removeAllListeners: (event) =>
+        # clear all references
+        delete @checkers
+        @query = default_query
+        EventEmitter::removeAllListeners.call(this, event)
 
     register: (type, checker) ->
         unless type is 'new' or type is 'end' or type is 'ready'
