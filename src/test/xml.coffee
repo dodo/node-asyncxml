@@ -13,8 +13,14 @@ module.exports =
 
     simple: (æ) ->
         xml = streamify new Builder
-        xml.stream.once 'data', (tag) -> æ.equal "<test/>", tag
-        xml.stream.on 'end', æ.done
+        xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
+        results = [
+            '<test>'
+            '</test>'
+        ]
         xml.tag('test').end()
         xml.end()
 
@@ -45,6 +51,24 @@ module.exports =
         results = [
             '<test>'
             '<items>'
+            '<item value="a">'
+            '</item>'
+            '<item value="b">'
+            '</item>'
+            '<item value="c">'
+            '</item>'
+            '</items>'
+            '</test>'
+        ]
+        xml
+            .tag('test')
+                .tag('items')
+                    .tag('item', value:'a').up()
+                    .tag('item', value:'b').up()
+                    .tag('item', value:'c').up()
+                .up()  # test
+            .up()  # items
+        .end() # xml
 
 
     'self closing': (æ) ->
@@ -84,7 +108,8 @@ module.exports =
             æ.done()
         results = [
             '<test>'
-            '<item value="b" a=1 b=2 c=3/>'
+            '<item value="b" a=1 b=2 c=3>'
+            '</item>'
             '</test>'
         ]
         test = xml.tag('test')
@@ -106,7 +131,8 @@ module.exports =
         results = [
             '<test>'
             'rofl'
-            '<item value="a" a=1 b=2 c=3/>'
+            '<item value="a" a=1 b=2 c=3>'
+            '</item>'
             'lol'
             '</test>'
         ]
@@ -117,7 +143,7 @@ module.exports =
         test.text("lol")
         item.up().up().end()
         æ.equal test.toString(), '<test>lol</test>'
-        æ.equal item.toString(), '<item value="a" a=1 b=2 c=3/>'
+        æ.equal item.toString(), '<item value="a" a=1 b=2 c=3></item>'
 
 
     text: (æ) ->
@@ -186,9 +212,14 @@ module.exports =
 
     attributes: (æ) ->
         xml = streamify new Builder
-        xml.stream.once 'data', (tag) ->
-            æ.equal "<test a=1 b=\"b\" c d=true/>", tag
-        xml.stream.on 'end', æ.done
+        xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
+        results = [
+            '<test a=1 b="b" c d=true>'
+            '</test>'
+        ]
         xml.tag('test', a:1, b:'b', c:null, d:true).end()
         xml.end()
 
@@ -200,7 +231,8 @@ module.exports =
             æ.equal 0, results.length
             æ.done()
         results = [
-            '<test/>'
+            '<test>'
+            '</test>'
             '<p>'
             'content'
             '</p>'
@@ -224,7 +256,8 @@ module.exports =
             æ.done()
         results = [
             '<apple>\n'
-            '  <wurm/>\n'
+            '  <wurm>\n'
+            '  </wurm>\n'
             '</apple>\n'
         ]
         apple = xml.tag('apple')
@@ -242,7 +275,8 @@ module.exports =
         results = [
             '<product>\n'
             '→ → →<metadata>\n'
-            '→ → →→ → →<count value=4/>\n'
+            '→ → →→ → →<count value=4>\n'
+            '→ → →→ → →</count>\n'
             '→ → →</metadata>\n'
             '</product>\n'
         ]
@@ -267,7 +301,8 @@ module.exports =
         results = [
             '<apple>'
             '<wurm color="red">'
-            '<seed/>'
+            '<seed>'
+            '</seed>'
             '</wurm>'
             '</apple>'
         ]
@@ -290,7 +325,8 @@ module.exports =
             '<apple>'
             '<wurm color="red">'
             '<seed>'
-            '<is dead=true/>'
+            '<is dead=true>'
+            '</is>'
             '</seed>'
             '</wurm>'
             '</apple>'
@@ -321,16 +357,24 @@ module.exports =
         results = [
             '<global>'
             '<test version=3 alt="info" border=0>'
-            '<top center=true/>'
+            '<top center=true>'
+            '</top>'
             '<foo bar="moo" border=0>'
-            '<first/>'
-            '<bar x=2/>'
-            '<center args="true"/>'
-            '<last/>'
+            '<first>'
+            '</first>'
+            '<bar x=2>'
+            '</bar>'
+            '<center args="true">'
+            '</center>'
+            '<last>'
+            '</last>'
             '<xxx ccc=true>'
-            '<pok/>'
-            '<asd/>'
-            '<happy dodo/>'
+            '<pok>'
+            '</pok>'
+            '<asd>'
+            '</asd>'
+            '<happy dodo>'
+            '</happy>'
             '</xxx>'
             '</foo>'
             '</test>'
@@ -371,8 +415,10 @@ module.exports =
             æ.done()
         results = [
             '<grass>'
-            '<dog/>'
-            '<cat/>'
+            '<dog>'
+            '</dog>'
+            '<cat>'
+            '</cat>'
             '</grass>'
         ]
         dog = null
@@ -416,7 +462,8 @@ module.exports =
         results = [
             '<apple>'
             '<wurm>'
-            '<seed/>'
+            '<seed>'
+            '</seed>'
             '</wurm>'
             '</apple>'
         ]
@@ -542,8 +589,10 @@ module.exports =
             æ.equal 0, results.length
             æ.done()
         results = [
-            '<root/>'
-            '<childA/>'
+            '<root>'
+            '</root>'
+            '<childA>'
+            '</childA>'
         ]
 
         xml.tag('root').end()
