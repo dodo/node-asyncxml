@@ -348,6 +348,41 @@ module.exports =
         xml.end()
 
 
+    'pause/resume': (æ) ->
+        xml = streamify new Builder
+        xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
+        xml.stream.on 'end', ->
+            æ.equal 0, results.length
+            æ.done()
+        results = [
+            '<apple>'
+            '<wurm color="red">'
+            '<seed>'
+            '<is dead=true>'
+            '</is>'
+            '</seed>'
+            '</wurm>'
+            '</apple>'
+        ]
+
+        seed = null
+        apple = xml.tag 'apple', ->
+            xml.stream.pause()
+            @$tag 'wurm', color:'red', ->
+                seed = @tag('seed')
+            @end()
+
+        setTimeout ( ->
+            æ.notEqual seed, null
+            return unless seed
+            seed.tag('is', dead:yes).end()
+            seed.end()
+            xml.stream.resume()
+        ), 3
+
+        xml.end()
+
+
     complex: (æ) ->
         xml = streamify new Builder
         xml.stream.on 'data', (tag) -> æ.equal results.shift(), tag
