@@ -76,7 +76,7 @@ add_tag = (newtag, callback) ->
         @emit 'add', this, tag
         @emit 'new', tag
         @isempty = no
-        tag.emit? 'close', tag if tag.closed
+        tag.emit? 'close', tag if tag.closed and tag.closed isnt 'approving'
         tag.emit? 'added', this
         callback?.call(this, tag)
 
