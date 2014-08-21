@@ -357,6 +357,9 @@ module.exports =
         results = [
             '<apple>'
             '<wurm color="red">'
+            '<type>'
+            'caterpillar'
+            '</type>'
             '<seed>'
             '<is dead=true>'
             '</is>'
@@ -368,8 +371,10 @@ module.exports =
         seed = null
         apple = xml.tag 'apple', ->
             xml.stream.pause()
-            @$tag 'wurm', color:'red', ->
-                seed = @tag('seed')
+            wurm = @tag 'wurm', color:'red', ->
+                @$tag 'type', "caterpillar"
+            seed = wurm.tag('seed')
+            wurm.end()
             @end()
 
         setTimeout ( ->
