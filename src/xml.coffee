@@ -94,7 +94,7 @@ new_tag = ->
 
     TagInstance = @builder?.Tag ? Tag
     newtag = new TagInstance name, attrs, null, opts
-    callback = ((tag) -> tag.children children, opts) if children?
+    callback = ((tag) -> tag.children children) if children?
     add_tag.call this, newtag, callback
     return newtag # hopefully this is still the same after the approval
 
@@ -122,9 +122,9 @@ class Tag extends EventEmitter
         @isempty = yes
         @isselfclosing = no
         @content = ""
-        @children children, opts
         @$tag = sync_tag
         @tag = new_tag
+        @children children
 
     attr: (key, value) =>
         if typeof key is 'string'
