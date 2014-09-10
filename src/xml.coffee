@@ -197,6 +197,9 @@ class Tag extends EventEmitter
         @end arguments... if opts.end
         parent
 
+    root: () =>
+        @parent?.root() ? this
+
     show: () =>
         @hidden = no
         @emit 'show', this
@@ -316,6 +319,7 @@ class Builder extends EventEmitter
         @tag = new_tag
         @$tag = sync_tag
 
+    root: Tag::root
     show: Tag::show
     hide: Tag::hide
     remove: Tag::remove
