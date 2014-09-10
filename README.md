@@ -240,6 +240,16 @@ The children parameter of `Tag::tag` is passed to this method.
 Emits whatever event is emitted inside the children scope (of course).
 
 
+#### tag.root()
+
+```javascript
+tag.root()
+```
+
+Returns the root parent (recursive).
+
+Doesn't close the tag nor its parents.
+
 #### tag.up([opts])
 
 ```javascript
